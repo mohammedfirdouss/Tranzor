@@ -73,6 +73,27 @@ Resources:
             Path: /v1/transactions
             Method: post
 
+
+  GetTransactionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GetTransaction
+      Handler: index.handler
+      Runtime: nodejs18.x
+      CodeUri: src/get_transaction/
+      Environment:
+        Variables:
+          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TransactionsTable
+      Events:
+        ApiGetTransaction:
+          Type: Api
+          Properties:
+            Path: /v1/transactions/{transactionId}
+            Method: get         
+
 Outputs:
   TransactionsTableName:
     Description: Name of the Transactions DynamoDB table
@@ -89,4 +110,7 @@ Outputs:
   TransactionProcessorFunctionArn:
     Description: ARN of the TransactionProcessor Lambda function
     Value: !GetAtt TransactionProcessorFunction.Arn 
-        
+
+  GetTransactionFunctionArn:
+    Description: ARN of the GetTransaction Lambda function
+    Value: !GetAtt GetTransactionFunction.Arn      
