@@ -39,7 +39,7 @@ function AppLayout() {
       <Sider>
         <div style={{ color: '#fff', padding: 16, fontWeight: 'bold', fontSize: 18 }}>
           Tranzor Admin
-      </div>
+        </div>
         <Menu
           theme="dark"
           mode="inline"
