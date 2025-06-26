@@ -1,156 +1,183 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: tranzor-api
-
 Globals:
   Function:
     Timeout: 10
     Runtime: nodejs22.x
     MemorySize: 256
     Tracing: Active
-
 Resources:
   TransactionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: Transactions
       AttributeDefinitions:
-        - AttributeName: transactionId
-          AttributeType: S
-        - AttributeName: accountId
-          AttributeType: S
-        - AttributeName: receivedTimestamp
-          AttributeType: S
+      - AttributeName: transactionId
+        AttributeType: S
+      - AttributeName: accountId
+        AttributeType: S
+      - AttributeName: receivedTimestamp
+        AttributeType: S
       KeySchema:
-        - AttributeName: transactionId
-          KeyType: HASH
+      - AttributeName: transactionId
+        KeyType: HASH
       GlobalSecondaryIndexes:
-        - IndexName: AccountId-ReceivedTimestamp-index
-          KeySchema:
-            - AttributeName: accountId
-              KeyType: HASH
-            - AttributeName: receivedTimestamp
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
+      - IndexName: AccountId-ReceivedTimestamp-index
+        KeySchema:
+        - AttributeName: accountId
+          KeyType: HASH
+        - AttributeName: receivedTimestamp
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
-  
   TransactionProcessingQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: TransactionProcessingQueue
-
   TransactionProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: TransactionProcessor
       Handler: index.handler
       Runtime: nodejs22.x
-      CodeUri: src/transaction_processor/
+      CodeUri: TransactionProcessorFunction
       Environment:
         Variables:
-          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+          TRANSACTIONS_TABLE_NAME:
+            Ref: TransactionsTable
       Policies:
-        - SQSPollerPolicy:
-            QueueName: !GetAtt TransactionProcessingQueue.QueueName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TransactionsTable
+      - SQSPollerPolicy:
+          QueueName:
+            Fn::GetAtt:
+            - TransactionProcessingQueue
+            - QueueName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TransactionsTable
       Events:
         SQSTransactionProcessing:
           Type: SQS
           Properties:
-            Queue: !GetAtt TransactionProcessingQueue.Arn
+            Queue:
+              Fn::GetAtt:
+              - TransactionProcessingQueue
+              - Arn
             BatchSize: 1
-
+    Metadata:
+      SamResourceId: TransactionProcessorFunction
   ProcessTransactionFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ProcessTransaction
       Handler: index.handler
-      CodeUri: src/process_transaction/
+      CodeUri: ProcessTransactionFunction
       Environment:
         Variables:
-          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
-          TRANSACTION_QUEUE_URL: !Ref TransactionProcessingQueue
+          TRANSACTIONS_TABLE_NAME:
+            Ref: TransactionsTable
+          TRANSACTION_QUEUE_URL:
+            Ref: TransactionProcessingQueue
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref TransactionsTable
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt TransactionProcessingQueue.QueueName
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: TransactionsTable
+      - SQSSendMessagePolicy:
+          QueueName:
+            Fn::GetAtt:
+            - TransactionProcessingQueue
+            - QueueName
       Events:
         ApiTransactionPost:
           Type: Api
           Properties:
             Path: /v1/transactions
             Method: post
-
-
+    Metadata:
+      SamResourceId: ProcessTransactionFunction
   GetTransactionFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: GetTransaction
       Handler: index.handler
       Runtime: nodejs22.x
-      CodeUri: src/get_transaction/
+      CodeUri: GetTransactionFunction
       Environment:
         Variables:
-          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+          TRANSACTIONS_TABLE_NAME:
+            Ref: TransactionsTable
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref TransactionsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: TransactionsTable
       Events:
         ApiGetTransaction:
           Type: Api
           Properties:
             Path: /v1/transactions/{transactionId}
-            Method: get  
-
-
+            Method: get
+    Metadata:
+      SamResourceId: GetTransactionFunction
   ListAccountTransactionsFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: ListAccountTransactions
       Handler: index.handler
       Runtime: nodejs22.x
-      CodeUri: src/list_account_transactions/
+      CodeUri: ListAccountTransactionsFunction
       Environment:
         Variables:
-          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+          TRANSACTIONS_TABLE_NAME:
+            Ref: TransactionsTable
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref TransactionsTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: TransactionsTable
       Events:
         ApiListAccountTransactions:
           Type: Api
           Properties:
             Path: /v1/accounts/{accountId}/transactions
             Method: get
-               
-
+    Metadata:
+      SamResourceId: ListAccountTransactionsFunction
 Outputs:
   TransactionsTableName:
     Description: Name of the Transactions DynamoDB table
-    Value: !Ref TransactionsTable
+    Value:
+      Ref: TransactionsTable
   ProcessTransactionFunctionArn:
     Description: ARN of the ProcessTransaction Lambda function
-    Value: !GetAtt ProcessTransactionFunction.Arn
+    Value:
+      Fn::GetAtt:
+      - ProcessTransactionFunction
+      - Arn
   ApiUrl:
     Description: API Gateway endpoint URL
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/v1/transactions"
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/v1/transactions
   TransactionProcessingQueueUrl:
     Description: URL of the Transaction Processing SQS queue
-    Value: !Ref TransactionProcessingQueue
+    Value:
+      Ref: TransactionProcessingQueue
   TransactionProcessorFunctionArn:
     Description: ARN of the TransactionProcessor Lambda function
-    Value: !GetAtt TransactionProcessorFunction.Arn 
-
+    Value:
+      Fn::GetAtt:
+      - TransactionProcessorFunction
+      - Arn
   GetTransactionFunctionArn:
     Description: ARN of the GetTransaction Lambda function
-    Value: !GetAtt GetTransactionFunction.Arn      
-
+    Value:
+      Fn::GetAtt:
+      - GetTransactionFunction
+      - Arn
   ListAccountTransactionsFunctionArn:
     Description: ARN of the ListAccountTransactions Lambda function
-    Value: !GetAtt ListAccountTransactionsFunction.Arn 
-  
+    Value:
+      Fn::GetAtt:
+      - ListAccountTransactionsFunction
+      - Arn
