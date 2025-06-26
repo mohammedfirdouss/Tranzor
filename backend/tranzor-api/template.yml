@@ -24,7 +24,7 @@ Resources:
       KeySchema:
         - AttributeName: transactionId
           KeyType: HASH
-          GlobalSecondaryIndexes:
+      GlobalSecondaryIndexes:
         - IndexName: AccountId-ReceivedTimestamp-index
           KeySchema:
             - AttributeName: accountId
