@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Tranzor
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Tracing: Active
+
+Resources:
+  TransactionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Transactions
+      AttributeDefinitions:
+        - AttributeName: transactionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: transactionId
+          KeyType: HASH
+      BillingMode: PAYPERREQUEST
+      SSESpecification:
+        SSEEnabled: true
+
+  ProcessTransactionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ProcessTransaction
+      Handler: index.handler
+      CodeUri: src/process_transaction/
+      Environment:
+        Variables:
+          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TransactionsTable
+      Events:
+        ApiTransactionPost:
+          Type: Api
+          Properties:
+            Path: /v1/transactions
+            Method: post
+
+Outputs:
+  TransactionsTableName:
+    Description: Name of the Transactions DynamoDB table
+    Value: !Ref TransactionsTable
+  ProcessTransactionFunctionArn:
+    Description: ARN of the ProcessTransaction Lambda function
+    Value: !GetAtt ProcessTransactionFunction.Arn
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/v1/transactions"
