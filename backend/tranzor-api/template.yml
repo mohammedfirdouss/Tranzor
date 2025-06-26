@@ -20,7 +20,7 @@ Resources:
       KeySchema:
         - AttributeName: transactionId
           KeyType: HASH
-      BillingMode: PAYPERREQUEST
+      BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
 
