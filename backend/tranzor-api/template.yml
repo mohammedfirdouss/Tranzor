@@ -92,7 +92,29 @@ Resources:
           Type: Api
           Properties:
             Path: /v1/transactions/{transactionId}
-            Method: get         
+            Method: get  
+
+
+  ListAccountTransactionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ListAccountTransactions
+      Handler: index.handler
+      Runtime: nodejs18.x
+      CodeUri: src/list_account_transactions/
+      Environment:
+        Variables:
+          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TransactionsTable
+      Events:
+        ApiListAccountTransactions:
+          Type: Api
+          Properties:
+            Path: /v1/accounts/{accountId}/transactions
+            Method: get
+               
 
 Outputs:
   TransactionsTableName:
@@ -114,3 +136,8 @@ Outputs:
   GetTransactionFunctionArn:
     Description: ARN of the GetTransaction Lambda function
     Value: !GetAtt GetTransactionFunction.Arn      
+
+  ListAccountTransactionsFunctionArn:
+    Description: ARN of the ListAccountTransactions Lambda function
+    Value: !GetAtt ListAccountTransactionsFunction.Arn 
+  
