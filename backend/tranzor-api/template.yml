@@ -17,9 +17,22 @@ Resources:
       AttributeDefinitions:
         - AttributeName: transactionId
           AttributeType: S
+        - AttributeName: accountId
+          AttributeType: S
+        - AttributeName: receivedTimestamp
+          AttributeType: S
       KeySchema:
         - AttributeName: transactionId
           KeyType: HASH
+          GlobalSecondaryIndexes:
+        - IndexName: AccountId-ReceivedTimestamp-index
+          KeySchema:
+            - AttributeName: accountId
+              KeyType: HASH
+            - AttributeName: receivedTimestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
