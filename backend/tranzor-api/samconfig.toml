@@ -3,7 +3,7 @@
 version = 0.1
 
 [default.global.parameters]
-stack_name = " Tranzor"
+stack_name = "Tranzor"
 
 [default.build.parameters]
 cached = true
