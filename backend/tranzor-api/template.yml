@@ -73,6 +73,46 @@ Resources:
             Path: /v1/transactions
             Method: post
 
+  GetTransactionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: GetTransaction
+      Handler: index.handler
+      Runtime: nodejs22.x
+      CodeUri: src/get_transaction/
+      Environment:
+        Variables:
+          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TransactionsTable
+      Events:
+        ApiGetTransaction:
+          Type: Api
+          Properties:
+            Path: /v1/transactions/{transactionId}
+            Method: get
+
+  ListAccountTransactionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ListAccountTransactions
+      Handler: index.handler
+      Runtime: nodejs18.x
+      CodeUri: src/list_account_transactions/
+      Environment:
+        Variables:
+          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TransactionsTable
+      Events:
+        ApiListAccountTransactions:
+          Type: Api
+          Properties:
+            Path: /v1/accounts/{accountId}/transactions
+            Method: get
+
 Outputs:
   TransactionsTableName:
     Description: Name of the Transactions DynamoDB table
