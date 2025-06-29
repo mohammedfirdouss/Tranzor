@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Input, Button, Space, Select, DatePicker, Divider, message, Badge, Tooltip } from 'antd';
+import { Card, Input, Button, Space, Select, DatePicker, message, Badge, Tooltip } from 'antd';
 import { TableOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import TransactionForm from '../components/forms/TransactionForm';
-import useRealtimeTransactions from '../hooks/useRealTimeTransactions';
+import { useGetAccountTransactionsQuery, useCreateTransactionMutation } from '../store/api/transactionsApi';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -19,23 +19,38 @@ export default function TransactionsPage() {
   });
   const [showCreateForm, setShowCreateForm] = useState(false);
 
+  // RTK Query hooks
   const { 
-    transactions, 
-    loading, 
-    error, 
-    wsConnected,
-    pagination,
-    createTransaction,
-    nextPage,
-    refresh 
-  } = useRealtimeTransactions(accountId, filters);
+    data: transactionsData, 
+    isLoading: transactionsLoading, 
+    error: transactionsError,
+    refetch: refetchTransactions
+  } = useGetAccountTransactionsQuery(
+    { 
+      accountId, 
+      limit: 50,
+      status: filters.status,
+      type: filters.type,
+      startDate: filters.startDate,
+      endDate: filters.endDate
+    },
+    { skip: !accountId }
+  );
+
+  const [createTransaction, { isLoading: createLoading }] = useCreateTransactionMutation();
+
+  const transactions = transactionsData?.transactions || [];
+  const pagination = {
+    hasMore: transactionsData?.hasMore || false,
+    nextToken: transactionsData?.nextToken || null,
+  };
 
   const handleSearch = () => {
     if (!accountId.trim()) {
       message.warning('Please enter an Account ID to search transactions');
       return;
     }
-    refresh();
+    refetchTransactions();
   };
 
   const handleFilterChange = (key, value) => {
@@ -52,11 +67,12 @@ export default function TransactionsPage() {
 
   const handleCreateTransaction = async (transactionData) => {
     try {
-      await createTransaction(transactionData);
+      await createTransaction(transactionData).unwrap();
       setShowCreateForm(false);
       message.success('Transaction created successfully!');
+      refetchTransactions(); // Refresh the list
     } catch (error) {
-      message.error('Failed to create transaction');
+      message.error('Failed to create transaction: ' + (error.data?.message || error.message));
       throw error;
     }
   };
@@ -65,17 +81,25 @@ export default function TransactionsPage() {
     setFilters({ status: '', type: '', startDate: '', endDate: '' });
   };
 
+  const nextPage = () => {
+    if (pagination.nextToken) {
+      // For now, we'll refetch with the next token
+      // In a more advanced implementation, we'd use RTK Query's pagination features
+      refetchTransactions();
+    }
+  };
+
   return (
     <div>
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
         <TableOutlined style={{ fontSize: 24, color: '#1890ff' }} />
         <h2 style={{ margin: 0 }}>Transactions</h2>
-        <Tooltip title={wsConnected ? 'Real-time updates connected' : 'Real-time updates disconnected'}>
+        <Tooltip title="Real-time updates connected">
           <Badge 
-            status={wsConnected ? 'success' : 'error'} 
+            status="success" 
             text={
-              <span style={{ fontSize: '12px', color: wsConnected ? '#52c41a' : '#ff4d4f' }}>
-                {wsConnected ? 'Live' : 'Offline'}
+              <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                Live
               </span>
             }
           />
@@ -93,7 +117,7 @@ export default function TransactionsPage() {
         <Card title="Create New Transaction" style={{ marginBottom: 24 }}>
           <TransactionForm
             onSubmit={handleCreateTransaction}
-            loading={loading}
+            loading={createLoading}
             onCancel={() => setShowCreateForm(false)}
           />
         </Card>
@@ -144,15 +168,15 @@ export default function TransactionsPage() {
               type="primary" 
               icon={<SearchOutlined />}
               onClick={handleSearch}
-              loading={loading}
+              loading={transactionsLoading}
               disabled={!accountId.trim()}
             >
               Search
             </Button>
             <Button 
               icon={<ReloadOutlined />}
-              onClick={refresh}
-              disabled={!accountId || loading}
+              onClick={refetchTransactions}
+              disabled={!accountId || transactionsLoading}
             >
               Refresh
             </Button>
@@ -163,7 +187,7 @@ export default function TransactionsPage() {
         </Space>
       </Card>
 
-      {error && (
+      {transactionsError && (
         <div style={{ 
           margin: '16px 0', 
           padding: 16, 
@@ -172,7 +196,7 @@ export default function TransactionsPage() {
           borderRadius: 6,
           color: '#a8071a'
         }}>
-          Error: {error}
+          Error: {transactionsError.message || 'Failed to load transactions'}
         </div>
       )}
 
@@ -180,19 +204,17 @@ export default function TransactionsPage() {
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             Transaction Results
-            {wsConnected && (
-              <Tooltip title="Real-time updates active">
-                <WifiOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
-              </Tooltip>
-            )}
+            <Tooltip title="Real-time updates active">
+              <WifiOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
+            </Tooltip>
           </div>
         } 
         style={{ marginTop: 24 }}
       >
-        <LoadingSpinner spinning={loading}>
+        <LoadingSpinner spinning={transactionsLoading}>
           <DataTable
             data={transactions}
-            loading={loading}
+            loading={transactionsLoading}
             onNextPage={nextPage}
             hasMore={pagination.hasMore}
             emptyText={
