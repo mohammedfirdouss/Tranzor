@@ -23,7 +23,7 @@ fi
 echo "📦 Deploying backend..."
 cd backend/tranzor-api
 sam build
-sam deploy --guided
+sam deploy
 cd ../..
 
 # Get API Gateway URL from SAM output
