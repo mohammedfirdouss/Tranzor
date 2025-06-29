@@ -1,0 +1,41 @@
+{
+  "name": "tranzor",
+  "version": "1.0.0",
+  "description": "Tranzor - Transaction Management System",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend/tranzor-api"
+  ],
+  "scripts": {
+    "dev:backend": "cd backend/tranzor-api && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "deploy": "./deploy.sh",
+    "deploy:backend": "./deploy-backend.sh",
+    "deploy:frontend": "./deploy-frontend.sh",
+    "setup": "./setup-local.sh",
+    "build": "npm run build --workspaces",
+    "install:all": "npm install --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/tranzor.git"
+  },
+  "keywords": [
+    "aws",
+    "serverless",
+    "react",
+    "nodejs",
+    "transactions"
+  ]
+}
