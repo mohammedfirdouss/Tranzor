@@ -3,6 +3,25 @@ const { DynamoDBClient, GetItemCommand } = require('@aws-sdk/client-dynamodb');
 const dynamo = new DynamoDBClient();
 const TABLE_NAME = process.env.TRANSACTIONS_TABLE_NAME;
 
+// Helper to recursively convert DynamoDB attribute values to JS values
+function fromDynamoDB(item) {
+  if (item.S !== undefined) return item.S;
+  if (item.N !== undefined) return Number(item.N);
+  if (item.BOOL !== undefined) return item.BOOL;
+  if (item.NULL !== undefined) return null;
+  if (item.M !== undefined) {
+    const obj = {};
+    for (const [k, v] of Object.entries(item.M)) {
+      obj[k] = fromDynamoDB(v);
+    }
+    return obj;
+  }
+  if (item.L !== undefined) {
+    return item.L.map(fromDynamoDB);
+  }
+  return item;
+}
+
 exports.handler = async (event) => {
   const transactionId = event.pathParameters && event.pathParameters.transactionId;
   if (!transactionId) {
@@ -25,12 +44,7 @@ exports.handler = async (event) => {
     // Convert DynamoDB item to plain JS object
     const item = {};
     for (const [k, v] of Object.entries(res.Item)) {
-      if (v.S !== undefined) item[k] = v.S;
-      else if (v.N !== undefined) item[k] = Number(v.N);
-      else if (v.M !== undefined) item[k] = Object.fromEntries(Object.entries(v.M).map(([kk, vv]) => [kk, vv.S || vv.N || vv.BOOL || vv.NULL]));
-      else if (v.BOOL !== undefined) item[k] = v.BOOL;
-      else if (v.NULL !== undefined) item[k] = null;
-      else item[k] = v;
+      item[k] = fromDynamoDB(v);
     }
     return {
       statusCode: 200,
