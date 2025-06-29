@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Card, Input, Button, Space, DatePicker, Select } from 'antd';
-import { FileSearchOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Input, Button, Space, DatePicker, Select, Typography, Divider } from 'antd';
+import { FileSearchOutlined, SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import useTransactions from '../hooks/useTransactions';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 export default function AuditTrailPage() {
   const [accountId, setAccountId] = useState('');
@@ -117,32 +118,36 @@ export default function AuditTrailPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <FileSearchOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-        <h2 style={{ margin: 0 }}>Audit Trail</h2>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <FileSearchOutlined style={{ fontSize: 24, color: '#1890ff' }} aria-label="Audit Trail Icon" />
+        <Title level={2} style={{ margin: 0, fontSize: 24 }}>Audit Trail</Title>
       </div>
-
-      <Card title="Search Audit Trail">
+      <Divider />
+      <Card title={<span><FilterOutlined style={{ color: '#1890ff', marginRight: 8 }} />Search Audit Trail</span>}>
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <Input
               placeholder="Account ID (required)"
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              style={{ width: 200 }}
+              style={{ width: 200, maxWidth: '100%' }}
               aria-label="Account ID"
+              allowClear
             />
             <RangePicker
               onChange={handleDateRangeChange}
-              style={{ width: 240 }}
+              style={{ width: 240, maxWidth: '100%' }}
               placeholder={['Start Date', 'End Date']}
+              aria-label="Date Range"
+              allowClear
             />
             <Select
               placeholder="Status"
               value={filters.status}
               onChange={(value) => handleFilterChange('status', value)}
-              style={{ width: 120 }}
+              style={{ width: 120, maxWidth: '100%' }}
               allowClear
+              aria-label="Status Filter"
             >
               <Option value="Pending">Pending</Option>
               <Option value="Approved">Approved</Option>
@@ -152,8 +157,9 @@ export default function AuditTrailPage() {
               placeholder="Type"
               value={filters.type}
               onChange={(value) => handleFilterChange('type', value)}
-              style={{ width: 140 }}
+              style={{ width: 140, maxWidth: '100%' }}
               allowClear
+              aria-label="Type Filter"
             >
               <Option value="transfer">Transfer</Option>
               <Option value="payment">Payment</Option>
@@ -162,31 +168,31 @@ export default function AuditTrailPage() {
               <Option value="refund">Refund</Option>
             </Select>
           </div>
-          
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Button 
               type="primary" 
-              icon={<SearchOutlined />}
+              icon={<SearchOutlined />} 
               onClick={handleSearch}
               loading={loading}
               disabled={!accountId.trim()}
+              aria-label="Search Audit Trail"
             >
               Search
             </Button>
             <Button 
-              icon={<ReloadOutlined />}
+              icon={<ReloadOutlined />} 
               onClick={refresh}
               disabled={!accountId || loading}
+              aria-label="Refresh Results"
             >
               Refresh
             </Button>
-            <Button onClick={clearFilters}>
+            <Button onClick={clearFilters} aria-label="Clear Filters">
               Clear Filters
             </Button>
           </div>
         </Space>
       </Card>
-
       {error && (
         <div style={{ 
           margin: '16px 0', 
@@ -194,13 +200,13 @@ export default function AuditTrailPage() {
           background: '#fff2f0', 
           border: '1px solid #ffccc7',
           borderRadius: 6,
-          color: '#a8071a'
-        }}>
+          color: '#a8071a',
+          fontWeight: 500
+        }} role="alert">
           Error: {error}
         </div>
       )}
-
-      <Card title="Audit Results" style={{ marginTop: 24 }}>
+      <Card title={<span>Audit Results</span>} style={{ marginTop: 24 }}>
         <LoadingSpinner spinning={loading}>
           <DataTable
             data={transactions}
@@ -210,8 +216,8 @@ export default function AuditTrailPage() {
             hasMore={pagination.hasMore}
             emptyText={
               !accountId 
-                ? "Enter an Account ID above to view audit trail" 
-                : "No audit records found matching your criteria"
+                ? <Text type="secondary">Enter an Account ID above to view audit trail</Text>
+                : <Text type="secondary">No audit records found matching your criteria</Text>
             }
           />
         </LoadingSpinner>
