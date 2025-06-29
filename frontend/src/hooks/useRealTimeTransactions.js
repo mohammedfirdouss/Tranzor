@@ -96,24 +96,14 @@ export const useRealTimeTransactions = (accountId, filters = {}) => {
   }, [accountId, api]);
 
   const createTransaction = useCallback(async (transactionData) => {
-    try {
-      const result = await api.post('/v1/transactions', transactionData);
-      // Don't need to manually refresh - WebSocket will provide real-time update
-      return result;
-    } catch (error) {
-      throw error;
-    }
+    return api.post('/v1/transactions', transactionData);
   }, [api]);
 
   const getTransactionDetails = useCallback(async (transactionId) => {
     if (!accountId) {
       throw new Error('Account ID is required');
     }
-    try {
-      return await api.get(`/v1/transactions/${transactionId}?accountId=${accountId}`);
-    } catch (error) {
-      throw error;
-    }
+    return api.get(`/v1/transactions/${transactionId}?accountId=${accountId}`);
   }, [accountId, api]);
 
   const nextPage = useCallback(() => {
@@ -139,13 +129,14 @@ export const useRealTimeTransactions = (accountId, filters = {}) => {
     }
   }, [accountId, refresh]);
 
-  // Handle filters change
+  // Fetch transactions when accountId or filters change
   useEffect(() => {
     if (accountId) {
       isInitialLoadRef.current = true;
       fetchTransactions({ pageSize: pagination.pageSize, nextToken: null });
     }
-  }, [filters, accountId, fetchTransactions, pagination.pageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId, JSON.stringify(filters), fetchTransactions, pagination.pageSize]);
 
   return {
     transactions,
