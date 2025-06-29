@@ -8,6 +8,8 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { store } from './store';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import DashboardPage from './pages/DashboardPage';
 import TransactionsPage from './pages/TransactionsPage';
@@ -164,10 +166,12 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <Router>
-      <ErrorBoundary>
-        <AppLayout />
-      </ErrorBoundary>
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <ErrorBoundary>
+          <AppLayout />
+        </ErrorBoundary>
+      </Router>
+    </Provider>
   );
 }
