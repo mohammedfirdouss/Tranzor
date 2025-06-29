@@ -121,18 +121,11 @@ export const useRealTimeTransactions = (accountId, filters = {}) => {
     fetchTransactions({ pageSize: 10, nextToken: null });
   }, [fetchTransactions]);
 
-  // Auto-fetch when accountId changes
+  // Auto-fetch when accountId or filters change
   useEffect(() => {
     if (accountId) {
       isInitialLoadRef.current = true;
-      refresh();
-    }
-  }, [accountId, refresh]);
-
-  // Fetch transactions when accountId or filters change
-  useEffect(() => {
-    if (accountId) {
-      isInitialLoadRef.current = true;
+      setPagination(prev => ({ ...prev, current: 1, nextToken: null }));
       fetchTransactions({ pageSize: pagination.pageSize, nextToken: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
