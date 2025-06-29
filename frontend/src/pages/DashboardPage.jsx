@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip } from 'antd';
-import { DashboardOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
+import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip, Typography, Divider } from 'antd';
+import { DashboardOutlined, ReloadOutlined, WifiOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import { useGetLatestTransactionsQuery, useGetTransactionQuery, useGetRealtimeMetricsQuery } from '../store/api/transactionsApi';
+
+const { Title, Text } = Typography;
 
 export default function DashboardPage() {
   const [accountId, setAccountId] = useState('');
@@ -70,48 +72,47 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <DashboardOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-        <h2 style={{ margin: 0 }}>Dashboard</h2>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <DashboardOutlined style={{ fontSize: 24, color: '#1890ff' }} aria-label="Dashboard Icon" />
+        <Title level={2} style={{ margin: 0, fontSize: 24 }}>Dashboard</Title>
         <Tooltip title="Real-time metrics connected">
           <Badge 
             status="success" 
-            text={
-              <span style={{ fontSize: '12px', color: '#52c41a' }}>
-                Live
-              </span>
-            }
+            text={<span style={{ fontSize: '12px', color: '#52c41a' }}>Live</span>}
+            aria-label="Live Metrics"
           />
         </Tooltip>
       </div>
-
-      <div style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
+      <Divider />
+      <div style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <Input
           placeholder="Enter Account ID to load dashboard data"
           value={accountId}
           onChange={(e) => setAccountId(e.target.value)}
           onKeyPress={handleKeyPress}
-          style={{ width: 300 }}
+          style={{ width: 300, maxWidth: '100%' }}
           aria-label="Account ID input"
+          allowClear
         />
         <Button 
           type="primary" 
           onClick={handleSearch}
           loading={transactionsLoading}
           disabled={!accountId.trim()}
+          aria-label="Load Dashboard"
         >
           Load Dashboard
         </Button>
         <Button 
-          icon={<ReloadOutlined />}
+          icon={<ReloadOutlined />} 
           onClick={refetchTransactions}
           disabled={!accountId || transactionsLoading}
           title="Refresh data"
+          aria-label="Refresh Dashboard"
         >
           Refresh
         </Button>
       </div>
-
       {error && (
         <div style={{ 
           marginBottom: 24, 
@@ -119,12 +120,12 @@ export default function DashboardPage() {
           background: '#fff2f0', 
           border: '1px solid #ffccc7',
           borderRadius: 6,
-          color: '#a8071a'
-        }}>
+          color: '#a8071a',
+          fontWeight: 500
+        }} role="alert">
           Error: {error.message || 'Failed to load dashboard data'}
         </div>
       )}
-
       <LoadingSpinner spinning={transactionsLoading || metricsLoading}>
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
@@ -227,8 +228,8 @@ export default function DashboardPage() {
             onViewDetails={handleViewDetails}
             emptyText={
               !accountId 
-                ? "Enter an Account ID above to view transactions" 
-                : "No transactions found for this account"
+                ? <Text type="secondary">Enter an Account ID above to view transactions</Text>
+                : <Text type="secondary">No transactions found for this account</Text>
             }
           />
         </Card>
@@ -244,6 +245,7 @@ export default function DashboardPage() {
           </Button>
         ]}
         width={800}
+        aria-label="Transaction Details Modal"
       >
         {detailsLoading ? (
           <LoadingSpinner spinning={true} />
