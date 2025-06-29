@@ -2,8 +2,8 @@ tasks:
   - name: setup-environment
     init: |
       cd /workspace
-      chmod +x setup-local.sh
-      ./setup-local.sh
+      chmod +x .devcontainer/setup.sh
+      ./.devcontainer/setup.sh
       cd $THEIA_WORKSPACE_ROOT
 
 vscode:
@@ -12,3 +12,6 @@ vscode:
     - ms-python.python
     - ms-vscode.vscode-json
     - bradlc.vscode-tailwindcss
+    - ms-vscode.vscode-typescript-next
+    - esbenp.prettier-vscode
+    - ms-vscode.vscode-eslint
