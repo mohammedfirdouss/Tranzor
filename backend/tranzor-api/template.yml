@@ -5,7 +5,7 @@ Description: tranzor-api
 Globals:
   Function:
     Timeout: 10
-    Runtime: nodejs22.x
+    Runtime: nodejs18.x
     MemorySize: 256
     Tracing: Active
 
@@ -47,21 +47,22 @@ Resources:
     Properties:
       FunctionName: TransactionProcessor
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: src/transaction_processor/
       Environment:
         Variables:
-          TRANSACTIONS_TABLE_NAME: !Ref TransactionsTable
+          TRANSACTIONS_TABLE_NAME:
+            Ref: TransactionsTable
       Policies:
         - SQSPollerPolicy:
-            QueueName: !GetAtt TransactionProcessingQueue.QueueName
+            QueueName: !Ref TransactionProcessingQueue
         - DynamoDBCrudPolicy:
             TableName: !Ref TransactionsTable
       Events:
         SQSTransactionProcessing:
           Type: SQS
           Properties:
-            Queue: !GetAtt TransactionProcessingQueue.Arn
+            Queue: !GetAtt [TransactionProcessingQueue, Arn]
             BatchSize: 1
 
   ProcessTransactionFunction:
@@ -92,7 +93,7 @@ Resources:
     Properties:
       FunctionName: GetTransaction
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: src/get_transaction/
       Environment:
         Variables:
@@ -113,7 +114,7 @@ Resources:
     Properties:
       FunctionName: ListAccountTransactions
       Handler: index.handler
-      Runtime: nodejs22.x
+      Runtime: nodejs18.x
       CodeUri: src/list_account_transactions/
       Environment:
         Variables:
