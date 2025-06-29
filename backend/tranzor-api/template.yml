@@ -24,6 +24,8 @@ Resources:
       KeySchema:
         - AttributeName: transactionId
           KeyType: HASH
+        - AttributeName: accountId
+          KeyType: RANGE
       GlobalSecondaryIndexes:
         - IndexName: AccountId-ReceivedTimestamp-index
           KeySchema:
@@ -153,5 +155,4 @@ Outputs:
 
   ListAccountTransactionsFunctionArn:
     Description: ARN of the ListAccountTransactions Lambda function
-    Value: !GetAtt ListAccountTransactionsFunction.Arn 
-  
+    Value: !GetAtt ListAccountTransactionsFunction.Arn
