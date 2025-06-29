@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Input, Button, Space, Select, DatePicker, Divider, message } from 'antd';
-import { TableOutlined, PlusOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Input, Button, Space, Select, DatePicker, Divider, message, Badge, Tooltip } from 'antd';
+import { TableOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import TransactionForm from '../components/forms/TransactionForm';
-import useTransactions from '../hooks/useTransactions';
+import useRealtimeTransactions from '../hooks/useRealTimeTransactions';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -23,11 +23,12 @@ export default function TransactionsPage() {
     transactions, 
     loading, 
     error, 
+    wsConnected,
     pagination,
     createTransaction,
     nextPage,
     refresh 
-  } = useTransactions(accountId, filters);
+  } = useRealtimeTransactions(accountId, filters);
 
   const handleSearch = () => {
     if (!accountId.trim()) {
@@ -69,6 +70,16 @@ export default function TransactionsPage() {
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
         <TableOutlined style={{ fontSize: 24, color: '#1890ff' }} />
         <h2 style={{ margin: 0 }}>Transactions</h2>
+        <Tooltip title={wsConnected ? 'Real-time updates connected' : 'Real-time updates disconnected'}>
+          <Badge 
+            status={wsConnected ? 'success' : 'error'} 
+            text={
+              <span style={{ fontSize: '12px', color: wsConnected ? '#52c41a' : '#ff4d4f' }}>
+                {wsConnected ? 'Live' : 'Offline'}
+              </span>
+            }
+          />
+        </Tooltip>
         <Button 
           type="primary" 
           icon={<PlusOutlined />}
@@ -165,7 +176,19 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      <Card title="Transaction Results" style={{ marginTop: 24 }}>
+      <Card 
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            Transaction Results
+            {wsConnected && (
+              <Tooltip title="Real-time updates active">
+                <WifiOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
+              </Tooltip>
+            )}
+          </div>
+        } 
+        style={{ marginTop: 24 }}
+      >
         <LoadingSpinner spinning={loading}>
           <DataTable
             data={transactions}
