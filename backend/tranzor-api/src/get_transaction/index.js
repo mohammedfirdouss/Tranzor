@@ -24,16 +24,18 @@ function fromDynamoDB(item) {
 
 exports.handler = async (event) => {
   const transactionId = event.pathParameters && event.pathParameters.transactionId;
-  if (!transactionId) {
+  // Accept accountId as a query string parameter
+  const accountId = event.queryStringParameters && event.queryStringParameters.accountId;
+  if (!transactionId || !accountId) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ message: 'Missing transactionId in path' })
+      body: JSON.stringify({ message: 'Missing transactionId or accountId' })
     };
   }
   try {
     const res = await dynamo.send(new GetItemCommand({
       TableName: TABLE_NAME,
-      Key: { transactionId: { S: transactionId } }
+      Key: { transactionId: { S: transactionId }, accountId: { S: accountId } }
     }));
     if (!res.Item) {
       return {
@@ -58,4 +60,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'Internal server error' })
     };
   }
-}; 
+};
