@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Statistic, Row, Col, Input, Button, Modal } from 'antd';
-import { DashboardOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip } from 'antd';
+import { DashboardOutlined, ReloadOutlined, WifiOutlined, WifiOutlined as WifiOffOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
-import useTransactions from '../hooks/useTransactions';
+import useRealtimeTransactions from '../hooks/useRealtimeTransactions';
 
 export default function DashboardPage() {
   const [accountId, setAccountId] = useState('');
@@ -14,9 +14,10 @@ export default function DashboardPage() {
     transactions, 
     loading, 
     error, 
+    wsConnected,
     getTransactionDetails, 
     refresh 
-  } = useTransactions(accountId);
+  } = useRealtimeTransactions(accountId);
 
   const stats = {
     total: transactions.length,
@@ -53,6 +54,16 @@ export default function DashboardPage() {
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
         <DashboardOutlined style={{ fontSize: 24, color: '#1890ff' }} />
         <h2 style={{ margin: 0 }}>Dashboard</h2>
+        <Tooltip title={wsConnected ? 'Real-time updates connected' : 'Real-time updates disconnected'}>
+          <Badge 
+            status={wsConnected ? 'success' : 'error'} 
+            text={
+              <span style={{ fontSize: '12px', color: wsConnected ? '#52c41a' : '#ff4d4f' }}>
+                {wsConnected ? 'Live' : 'Offline'}
+              </span>
+            }
+          />
+        </Tooltip>
       </div>
 
       <div style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
@@ -135,7 +146,19 @@ export default function DashboardPage() {
           </Col>
         </Row>
 
-        <Card title="Recent Transactions" style={{ marginTop: 24 }}>
+        <Card 
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              Recent Transactions
+              {wsConnected && (
+                <Tooltip title="Real-time updates active">
+                  <WifiOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
+                </Tooltip>
+              )}
+            </div>
+          } 
+          style={{ marginTop: 24 }}
+        >
           <DataTable
             data={transactions.slice(0, 10)}
             loading={loading}
@@ -198,9 +221,11 @@ export default function DashboardPage() {
                     background: '#f5f5f5', 
                     padding: 12, 
                     borderRadius: 4,
-                    marginTop: 8
+                    marginTop: 8,
+                    fontSize: '12px',
+                    overflow: 'auto'
                   }}>
-                    {JSON.stringify(JSON.parse(selectedTransaction.metadata), null, 2)}
+                    {JSON.stringify(selectedTransaction.metadata, null, 2)}
                   </pre>
                 </Col>
               )}
