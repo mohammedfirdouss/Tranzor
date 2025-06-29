@@ -1,24 +1,14 @@
 tasks:
-  - name: aws-sam
+  - name: setup-environment
     init: |
       cd /workspace
-      wget https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
-      unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
-      sudo ./sam-installation/install
+      chmod +x setup-local.sh
+      ./setup-local.sh
       cd $THEIA_WORKSPACE_ROOT
- 
-  - name: aws-cli
-    env: 
-      AWS_CLI_AUTO_PROMPT: on-partial
-    before: |
-      cd /workspace
-      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      unzip awscliv2.zip
-      sudo ./aws/install
-      cd $THEIA_WORKSPACE_ROOT
-                   
+
 vscode:
   extensions:
     - 42Crunch.vscode-openapi
-
     - ms-python.python
+    - ms-vscode.vscode-json
+    - bradlc.vscode-tailwindcss
