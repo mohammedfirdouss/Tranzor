@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Table, Input, Button, Space, message } from 'antd';
 
-const API_BASE_URL = 'YOUR_API_GATEWAY_URL'; // Replace with your API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function AuditTrailPage() {
   const [accountId, setAccountId] = useState('');

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Table, Tag, Input, Button, Space, message } from 'antd';
 
-const API_BASE_URL = 'YOUR_API_GATEWAY_URL'; // <-- Replace with your deployed API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // <-- Replace with your deployed API base URL
 
 export default function TransactionsPage() {
   const [data, setData] = useState([]);

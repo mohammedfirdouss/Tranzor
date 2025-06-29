@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Statistic, Row, Col, Input, Button, Table, message } from 'antd';
 
-const API_BASE_URL = 'YOUR_API_GATEWAY_URL'; // Replace with your API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function DashboardPage() {
   const [accountId, setAccountId] = useState('');
