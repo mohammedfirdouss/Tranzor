@@ -39,6 +39,7 @@
     "transactions"
   ],
   "dependencies": {
+    "react-icons": "^5.5.0",
     "react-redux": "^9.2.0"
   }
 }

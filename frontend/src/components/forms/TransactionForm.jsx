@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Select, InputNumber, message } from 'antd';
+import React from 'react';
+import { Form, Input, Button, Select, InputNumber, message, Space } from 'antd';
 
 const { Option } = Select;
 
@@ -112,10 +112,10 @@ const TransactionForm = ({ onSubmit, loading = false, onCancel }) => {
       </Form.Item>
 
       <Form.Item label="Amount">
-        <Input.Group compact>
+        <Space.Compact style={{ width: '100%' }}>
           <Form.Item
             name="amountValue"
-            style={{ width: '70%' }}
+            noStyle
             rules={[{ validator: validateAmount }]}
           >
             <InputNumber
@@ -123,16 +123,16 @@ const TransactionForm = ({ onSubmit, loading = false, onCancel }) => {
               min={0.01}
               max={1000000}
               precision={2}
-              style={{ width: '100%' }}
+              style={{ width: '70%' }}
             />
           </Form.Item>
           <Form.Item
             name="amountCurrency"
-            style={{ width: '30%' }}
+            noStyle
             initialValue="USD"
             rules={[{ required: true, message: 'Currency is required' }]}
           >
-            <Select placeholder="Currency">
+            <Select placeholder="Currency" style={{ width: '30%' }}>
               <Option value="USD">USD</Option>
               <Option value="EUR">EUR</Option>
               <Option value="GBP">GBP</Option>
@@ -140,7 +140,7 @@ const TransactionForm = ({ onSubmit, loading = false, onCancel }) => {
               <Option value="CAD">CAD</Option>
             </Select>
           </Form.Item>
-        </Input.Group>
+        </Space.Compact>
       </Form.Item>
 
       <Form.Item

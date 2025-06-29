@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Card, Input, Button, Space, Select, DatePicker, message, Badge, Tooltip } from 'antd';
-import { TableOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, WifiOutlined } from '@ant-design/icons';
+import { Input, Button, Space, DatePicker, message, Select } from 'antd';
+import * as RadixThemes from '@radix-ui/themes';
+import '@radix-ui/themes/styles.css';
+import { MagnifyingGlassIcon, PlusIcon, ReloadIcon, TableIcon } from '@radix-ui/react-icons';
+import { FiWifi } from 'react-icons/fi';
+import * as RadixTooltip from '@radix-ui/react-tooltip';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import TransactionForm from '../components/forms/TransactionForm';
 import { useGetAccountTransactionsQuery, useCreateTransactionMutation } from '../store/api/transactionsApi';
 
-const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 export default function TransactionsPage() {
@@ -90,141 +93,155 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <TableOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-        <h2 style={{ margin: 0 }}>Transactions</h2>
-        <Tooltip title="Real-time updates connected">
-          <Badge 
-            status="success" 
-            text={
-              <span style={{ fontSize: '12px', color: '#52c41a' }}>
-                Live
+    <RadixThemes.Theme appearance="light" accentColor="indigo" grayColor="mauve" radius="large">
+      <div>
+        {/* Header */}
+        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <TableIcon width={24} height={24} color="#6366f1" />
+          <h2 style={{ margin: 0 }}>Transactions</h2>
+          <RadixTooltip.Root>
+            <RadixTooltip.Trigger asChild>
+              <span>
+                <RadixThemes.Badge color="green" variant="solid" size="2">Live</RadixThemes.Badge>
               </span>
-            }
-          />
-        </Tooltip>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={() => setShowCreateForm(!showCreateForm)}
-        >
-          {showCreateForm ? 'Cancel' : 'Create Transaction'}
-        </Button>
-      </div>
-
-      {showCreateForm && (
-        <Card title="Create New Transaction" style={{ marginBottom: 24 }}>
-          <TransactionForm
-            onSubmit={handleCreateTransaction}
-            loading={createLoading}
-            onCancel={() => setShowCreateForm(false)}
-          />
-        </Card>
-      )}
-
-      <Card title="Search & Filter Transactions">
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Input
-              placeholder="Account ID (required)"
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              style={{ width: 200 }}
-              aria-label="Account ID"
-            />
-            <Select
-              placeholder="Status"
-              value={filters.status}
-              onChange={(value) => handleFilterChange('status', value)}
-              style={{ width: 120 }}
-              allowClear
-            >
-              <Option value="Pending">Pending</Option>
-              <Option value="Approved">Approved</Option>
-              <Option value="Declined">Declined</Option>
-            </Select>
-            <Select
-              placeholder="Type"
-              value={filters.type}
-              onChange={(value) => handleFilterChange('type', value)}
-              style={{ width: 140 }}
-              allowClear
-            >
-              <Option value="transfer">Transfer</Option>
-              <Option value="payment">Payment</Option>
-              <Option value="deposit">Deposit</Option>
-              <Option value="withdrawal">Withdrawal</Option>
-              <Option value="refund">Refund</Option>
-            </Select>
-            <RangePicker
-              onChange={handleDateRangeChange}
-              style={{ width: 240 }}
-            />
-          </div>
-          
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button 
-              type="primary" 
-              icon={<SearchOutlined />}
-              onClick={handleSearch}
-              loading={transactionsLoading}
-              disabled={!accountId.trim()}
-            >
-              Search
-            </Button>
-            <Button 
-              icon={<ReloadOutlined />}
-              onClick={refetchTransactions}
-              disabled={!accountId || transactionsLoading}
-            >
-              Refresh
-            </Button>
-            <Button onClick={clearFilters}>
-              Clear Filters
-            </Button>
-          </div>
-        </Space>
-      </Card>
-
-      {transactionsError && (
-        <div style={{ 
-          margin: '16px 0', 
-          padding: 16, 
-          background: '#fff2f0', 
-          border: '1px solid #ffccc7',
-          borderRadius: 6,
-          color: '#a8071a'
-        }}>
-          Error: {transactionsError.message || 'Failed to load transactions'}
+            </RadixTooltip.Trigger>
+            <RadixTooltip.Content side="bottom">Real-time updates connected</RadixTooltip.Content>
+          </RadixTooltip.Root>
+          <RadixThemes.Button
+            color="indigo"
+            variant="solid"
+            size="3"
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            style={{ marginLeft: 'auto' }}
+          >
+            {showCreateForm ? <ReloadIcon /> : <PlusIcon />}
+            {showCreateForm ? 'Cancel' : 'Create Transaction'}
+          </RadixThemes.Button>
         </div>
-      )}
 
-      <Card 
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            Transaction Results
-            <Tooltip title="Real-time updates active">
-              <WifiOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
-            </Tooltip>
-          </div>
-        } 
-        style={{ marginTop: 24 }}
-      >
-        <LoadingSpinner spinning={transactionsLoading}>
-          <DataTable
-            data={transactions}
-            loading={transactionsLoading}
-            onNextPage={nextPage}
-            hasMore={pagination.hasMore}
-            emptyText={
-              !accountId 
-                ? "Enter an Account ID above to search transactions" 
-                : "No transactions found matching your criteria"
-            }
-          />
-        </LoadingSpinner>
-      </Card>
-    </div>
+        {/* Create Transaction Form */}
+        {showCreateForm && (
+          <RadixThemes.Card style={{ marginBottom: 24 }}>
+            <RadixThemes.Heading as="h3" size="4" mb="3">Create New Transaction</RadixThemes.Heading>
+            <TransactionForm
+              onSubmit={handleCreateTransaction}
+              loading={createLoading}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          </RadixThemes.Card>
+        )}
+
+        {/* Search & Filter Card */}
+        <RadixThemes.Card>
+          <RadixThemes.Flex direction="column" gap="3">
+            <RadixThemes.Flex gap="3" align="center" wrap="wrap">
+              <Input
+                placeholder="Account ID (required)"
+                value={accountId}
+                onChange={e => setAccountId(e.target.value)}
+                aria-label="Account ID"
+                style={{ width: 200 }}
+              />
+              <Select
+                placeholder="Status"
+                value={filters.status}
+                onChange={value => handleFilterChange('status', value)}
+                style={{ width: 120 }}
+                allowClear
+              >
+                <Select.Option value="Pending">Pending</Select.Option>
+                <Select.Option value="Approved">Approved</Select.Option>
+                <Select.Option value="Declined">Declined</Select.Option>
+              </Select>
+              <Select
+                placeholder="Type"
+                value={filters.type}
+                onChange={value => handleFilterChange('type', value)}
+                style={{ width: 140 }}
+                allowClear
+              >
+                <Select.Option value="transfer">Transfer</Select.Option>
+                <Select.Option value="payment">Payment</Select.Option>
+                <Select.Option value="deposit">Deposit</Select.Option>
+                <Select.Option value="withdrawal">Withdrawal</Select.Option>
+                <Select.Option value="refund">Refund</Select.Option>
+              </Select>
+              {/* Keep AntD RangePicker for now, can be replaced with a Radix/other date picker later */}
+              <RangePicker
+                onChange={handleDateRangeChange}
+                style={{ width: 240 }}
+              />
+            </RadixThemes.Flex>
+            <RadixThemes.Flex gap="2">
+              <RadixThemes.Button
+                color="indigo"
+                variant="solid"
+                size="2"
+                onClick={handleSearch}
+                loading={transactionsLoading}
+                disabled={!accountId.trim()}
+              >
+                <MagnifyingGlassIcon /> Search
+              </RadixThemes.Button>
+              <RadixThemes.Button
+                color="gray"
+                variant="soft"
+                size="2"
+                onClick={refetchTransactions}
+                disabled={!accountId || transactionsLoading}
+              >
+                <ReloadIcon /> Refresh
+              </RadixThemes.Button>
+              <RadixThemes.Button
+                color="gray"
+                variant="ghost"
+                size="2"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </RadixThemes.Button>
+            </RadixThemes.Flex>
+          </RadixThemes.Flex>
+        </RadixThemes.Card>
+
+        {/* Error Message */}
+        {transactionsError && (
+          <RadixThemes.AlertDialog.Root open>
+            <RadixThemes.AlertDialog.Content>
+              <RadixThemes.AlertDialog.Title>Error</RadixThemes.AlertDialog.Title>
+              <RadixThemes.Text color="red">
+                {transactionsError.message || 'Failed to load transactions'}
+              </RadixThemes.Text>
+            </RadixThemes.AlertDialog.Content>
+          </RadixThemes.AlertDialog.Root>
+        )}
+
+        {/* Results Card */}
+        <RadixThemes.Card style={{ marginTop: 24 }}>
+          <RadixThemes.Flex align="center" gap="2">
+            <RadixThemes.Heading as="h4" size="3">Transaction Results</RadixThemes.Heading>
+            <RadixTooltip.Root>
+              <RadixTooltip.Trigger asChild>
+                <span><FiWifi color="#52c41a" size={16} /></span>
+              </RadixTooltip.Trigger>
+              <RadixTooltip.Content side="bottom">Real-time updates active</RadixTooltip.Content>
+            </RadixTooltip.Root>
+          </RadixThemes.Flex>
+          <LoadingSpinner spinning={transactionsLoading}>
+            <DataTable
+              data={transactions}
+              loading={transactionsLoading}
+              onNextPage={nextPage}
+              hasMore={pagination.hasMore}
+              emptyText={
+                !accountId
+                  ? 'Enter an Account ID above to search transactions'
+                  : 'No transactions found matching your criteria'
+              }
+            />
+          </LoadingSpinner>
+        </RadixThemes.Card>
+      </div>
+    </RadixThemes.Theme>
   );
 }
