@@ -4,7 +4,7 @@ import { TableOutlined, PlusOutlined, SearchOutlined, ReloadOutlined, WifiOutlin
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import TransactionForm from '../components/forms/TransactionForm';
-import useRealtimeTransactions from '../hooks/useRealtimeTransactions';
+import useRealtimeTransactions from '../hooks/useRealTimeTransactions';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;

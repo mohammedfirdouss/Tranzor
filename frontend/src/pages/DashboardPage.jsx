@@ -3,7 +3,7 @@ import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip } from 
 import { DashboardOutlined, ReloadOutlined, WifiOutlined, WifiOutlined as WifiOffOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
-import useRealtimeTransactions from '../hooks/useRealtimeTransactions';
+import useRealtimeTransactions from '../hooks/useRealTimeTransactions';
 
 export default function DashboardPage() {
   const [accountId, setAccountId] = useState('');
