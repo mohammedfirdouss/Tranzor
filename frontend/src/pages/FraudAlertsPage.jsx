@@ -1,71 +1,165 @@
-import { useState } from 'react';
-import { Table, Input, Button, Space, Tag, message } from 'antd';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import React, { useState } from 'react';
+import { Card, Input, Button, Space, Tag } from 'antd';
+import { AlertOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import DataTable from '../components/common/DataTable';
+import useTransactions from '../hooks/useTransactions';
 
 export default function FraudAlertsPage() {
   const [accountId, setAccountId] = useState('');
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  
+  const { 
+    transactions, 
+    loading, 
+    error, 
+    refresh 
+  } = useTransactions(accountId, { status: 'Declined' });
 
-  const fetchFraudAlerts = async () => {
-    if (!accountId) {
-      message.info('Please enter an account ID to search.');
+  const handleSearch = () => {
+    if (!accountId.trim()) {
       return;
     }
-    setLoading(true);
-    try {
-      const url = `${API_BASE_URL}/accounts/${accountId}/transactions?status=Declined`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch fraud alerts');
-      const json = await res.json();
-      setData(json.transactions || []);
-    } catch (err) {
-      message.error('Error fetching fraud alerts');
-    } finally {
-      setLoading(false);
+    refresh();
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
-  const columns = [
-    { title: 'ID', dataIndex: 'transactionId', key: 'id' },
-    { title: 'Type', dataIndex: 'transactionType', key: 'type' },
+  const fraudColumns = [
+    {
+      title: 'Transaction ID',
+      dataIndex: 'transactionId',
+      key: 'transactionId',
+      width: 200,
+      ellipsis: true,
+    },
+    {
+      title: 'Type',
+      dataIndex: 'transactionType',
+      key: 'transactionType',
+      width: 120,
+    },
     {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) =>
-        amount && typeof amount === 'object'
-          ? `${amount.value} ${amount.currency}`
-          : '',
+      width: 150,
+      render: (amount) => {
+        if (!amount || typeof amount !== 'object') return '-';
+        return `${amount.value} ${amount.currency}`;
+      },
     },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (status) => <Tag color="red">{status}</Tag> },
-    { title: 'Timestamp', dataIndex: 'receivedTimestamp', key: 'timestamp' },
-    { title: 'Sender', dataIndex: 'senderAccountId', key: 'sender' },
-    { title: 'Receiver', dataIndex: 'receiverAccountId', key: 'receiver' },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status) => (
+        <Tag color="red" icon={<AlertOutlined />}>
+          {status}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Timestamp',
+      dataIndex: 'receivedTimestamp',
+      key: 'receivedTimestamp',
+      width: 180,
+      render: (timestamp) => {
+        if (!timestamp) return '-';
+        return new Date(timestamp).toLocaleString();
+      },
+    },
+    {
+      title: 'Sender',
+      dataIndex: 'senderAccountId',
+      key: 'senderAccountId',
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: 'Receiver',
+      dataIndex: 'receiverAccountId',
+      key: 'receiverAccountId',
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: 'Reason',
+      dataIndex: 'statusReason',
+      key: 'statusReason',
+      width: 200,
+      render: (reason) => reason || 'Fraud Detected',
+    },
   ];
 
   return (
     <div>
-      <h2>Fraud Alerts</h2>
-      <Space style={{ marginBottom: 16 }}>
-        <Input
-          placeholder="Account ID"
-          value={accountId}
-          onChange={(e) => setAccountId(e.target.value)}
-          style={{ width: 200 }}
-        />
-        <Button type="primary" onClick={fetchFraudAlerts}>
-          Search
-        </Button>
-      </Space>
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="transactionId"
-        loading={loading}
-        pagination={false}
-      />
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <AlertOutlined style={{ fontSize: 24, color: '#ff4d4f' }} />
+        <h2 style={{ margin: 0 }}>Fraud Alerts</h2>
+        <Tag color="red" style={{ marginLeft: 'auto' }}>
+          {transactions.length} Alert{transactions.length !== 1 ? 's' : ''}
+        </Tag>
+      </div>
+
+      <Card title="Search Fraud Alerts">
+        <Space style={{ marginBottom: 16 }}>
+          <Input
+            placeholder="Enter Account ID to search fraud alerts"
+            value={accountId}
+            onChange={(e) => setAccountId(e.target.value)}
+            onKeyPress={handleKeyPress}
+            style={{ width: 300 }}
+            aria-label="Account ID"
+          />
+          <Button 
+            type="primary" 
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+            loading={loading}
+            disabled={!accountId.trim()}
+          >
+            Search
+          </Button>
+          <Button 
+            icon={<ReloadOutlined />}
+            onClick={refresh}
+            disabled={!accountId || loading}
+          >
+            Refresh
+          </Button>
+        </Space>
+
+        {error && (
+          <div style={{ 
+            marginBottom: 16, 
+            padding: 16, 
+            background: '#fff2f0', 
+            border: '1px solid #ffccc7',
+            borderRadius: 6,
+            color: '#a8071a'
+          }}>
+            Error: {error}
+          </div>
+        )}
+
+        <LoadingSpinner spinning={loading}>
+          <DataTable
+            data={transactions}
+            columns={fraudColumns}
+            loading={loading}
+            emptyText={
+              !accountId 
+                ? "Enter an Account ID above to search for fraud alerts" 
+                : "No fraud alerts found for this account"
+            }
+          />
+        </LoadingSpinner>
+      </Card>
     </div>
   );
 }

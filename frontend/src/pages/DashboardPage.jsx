@@ -1,119 +1,213 @@
-import { useState } from 'react';
-import { Card, Statistic, Row, Col, Input, Button, Table, message } from 'antd';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import React, { useState } from 'react';
+import { Card, Statistic, Row, Col, Input, Button, Modal } from 'antd';
+import { DashboardOutlined, ReloadOutlined } from '@ant-design/icons';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import DataTable from '../components/common/DataTable';
+import useTransactions from '../hooks/useTransactions';
 
 export default function DashboardPage() {
   const [accountId, setAccountId] = useState('');
-  const [stats, setStats] = useState({ total: 0, approved: 0, declined: 0 });
-  const [recent, setRecent] = useState([]);
-  const [loading, setLoading] = useState(false);
-  // Add: View transaction details
-  const [selectedTxn, setSelectedTxn] = useState(null);
-  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [detailsVisible, setDetailsVisible] = useState(false);
+  
+  const { 
+    transactions, 
+    loading, 
+    error, 
+    getTransactionDetails, 
+    refresh 
+  } = useTransactions(accountId);
 
-  const fetchStats = async () => {
-    if (!accountId) {
-      message.info('Please enter an account ID.');
-      return;
-    }
-    setLoading(true);
+  const stats = {
+    total: transactions.length,
+    approved: transactions.filter(t => t.status === 'Approved').length,
+    declined: transactions.filter(t => t.status === 'Declined').length,
+    pending: transactions.filter(t => t.status === 'Pending').length,
+  };
+
+  const handleViewDetails = async (transaction) => {
     try {
-      const url = `${API_BASE_URL}/accounts/${accountId}/transactions?limit=100`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const json = await res.json();
-      const txns = json.transactions || [];
-      setStats({
-        total: txns.length,
-        approved: txns.filter(t => t.status === 'Approved').length,
-        declined: txns.filter(t => t.status === 'Declined').length,
-      });
-      setRecent(txns.slice(0, 5));
-    } catch (err) {
-      message.error('Error fetching dashboard data');
-    } finally {
-      setLoading(false);
+      const details = await getTransactionDetails(transaction.transactionId);
+      setSelectedTransaction(details);
+      setDetailsVisible(true);
+    } catch (error) {
+      console.error('Failed to fetch transaction details:', error);
     }
   };
 
-  const fetchTransactionDetails = async (transactionId) => {
-    setDetailsLoading(true);
-    try {
-      // You need accountId for the composite key
-      const url = `${API_BASE_URL}/${transactionId}?accountId=${accountId}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch details');
-      const json = await res.json();
-      setSelectedTxn(json);
-    } catch (err) {
-      message.error('Error fetching transaction details');
-    } finally {
-      setDetailsLoading(false);
+  const handleSearch = () => {
+    if (!accountId.trim()) {
+      return;
+    }
+    refresh();
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
   return (
     <div>
-      <h2>Dashboard</h2>
-      <Input.Search
-        placeholder="Account ID"
-        enterButton="Load"
-        value={accountId}
-        onChange={e => setAccountId(e.target.value)}
-        onSearch={fetchStats}
-        style={{ width: 300, marginBottom: 24 }}
-        loading={loading}
-      />
-      <Button onClick={fetchStats} loading={loading} style={{ marginBottom: 24, marginLeft: 16 }}>
-        Refresh
-      </Button>
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card loading={loading}>
-            <Statistic title="Total Transactions" value={stats.total} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card loading={loading}>
-            <Statistic title="Approved" value={stats.approved} valueStyle={{ color: 'green' }} />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card loading={loading}>
-            <Statistic title="Declined" value={stats.declined} valueStyle={{ color: 'red' }} />
-          </Card>
-        </Col>
-      </Row>
-      <h3>Recent Transactions</h3>
-      {recent.length === 0 && !loading && (
-        <div style={{ marginBottom: 16, color: '#888' }}>No transactions found for this account.</div>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <DashboardOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+        <h2 style={{ margin: 0 }}>Dashboard</h2>
+      </div>
+
+      <div style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
+        <Input
+          placeholder="Enter Account ID to load dashboard data"
+          value={accountId}
+          onChange={(e) => setAccountId(e.target.value)}
+          onKeyPress={handleKeyPress}
+          style={{ width: 300 }}
+          aria-label="Account ID input"
+        />
+        <Button 
+          type="primary" 
+          onClick={handleSearch}
+          loading={loading}
+          disabled={!accountId.trim()}
+        >
+          Load Dashboard
+        </Button>
+        <Button 
+          icon={<ReloadOutlined />}
+          onClick={refresh}
+          disabled={!accountId || loading}
+          title="Refresh data"
+        >
+          Refresh
+        </Button>
+      </div>
+
+      {error && (
+        <div style={{ 
+          marginBottom: 24, 
+          padding: 16, 
+          background: '#fff2f0', 
+          border: '1px solid #ffccc7',
+          borderRadius: 6,
+          color: '#a8071a'
+        }}>
+          Error: {error}
+        </div>
       )}
-      <Table
-        columns={[
-          { title: 'ID', dataIndex: 'transactionId', key: 'id' },
-          { title: 'Type', dataIndex: 'transactionType', key: 'type' },
-          { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (a) => a && typeof a === 'object' ? `${a.value} ${a.currency}` : '' },
-          { title: 'Status', dataIndex: 'status', key: 'status' },
-          { title: 'Timestamp', dataIndex: 'receivedTimestamp', key: 'timestamp' },
-          { title: 'Action', key: 'action', render: (_, record) => (
-            <Button size="small" onClick={() => fetchTransactionDetails(record.transactionId)} loading={detailsLoading && selectedTxn?.transactionId === record.transactionId}>
-              View Details
-            </Button>
-          ) },
-        ]}
-        dataSource={recent}
-        rowKey="transactionId"
-        pagination={false}
-        loading={loading}
-        locale={{ emptyText: loading ? 'Loading...' : 'No transactions found' }}
-      />
-      {selectedTxn && (
-        <Card style={{ marginTop: 24 }} title={`Transaction Details: ${selectedTxn.transactionId}`} onClose={() => setSelectedTxn(null)}>
-          <pre>{JSON.stringify(selectedTxn, null, 2)}</pre>
-          <Button onClick={() => setSelectedTxn(null)} style={{ marginTop: 8 }}>Close</Button>
+
+      <LoadingSpinner spinning={loading}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic 
+                title="Total Transactions" 
+                value={stats.total}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic 
+                title="Approved" 
+                value={stats.approved} 
+                valueStyle={{ color: '#52c41a' }} 
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic 
+                title="Declined" 
+                value={stats.declined} 
+                valueStyle={{ color: '#ff4d4f' }} 
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card>
+              <Statistic 
+                title="Pending" 
+                value={stats.pending} 
+                valueStyle={{ color: '#fa8c16' }} 
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        <Card title="Recent Transactions" style={{ marginTop: 24 }}>
+          <DataTable
+            data={transactions.slice(0, 10)}
+            loading={loading}
+            onViewDetails={handleViewDetails}
+            emptyText={
+              !accountId 
+                ? "Enter an Account ID above to view transactions" 
+                : "No transactions found for this account"
+            }
+          />
         </Card>
-      )}
+      </LoadingSpinner>
+
+      <Modal
+        title={`Transaction Details`}
+        open={detailsVisible}
+        onCancel={() => setDetailsVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailsVisible(false)}>
+            Close
+          </Button>
+        ]}
+        width={800}
+      >
+        {selectedTransaction && (
+          <div>
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <strong>Transaction ID:</strong><br />
+                {selectedTransaction.transactionId}
+              </Col>
+              <Col span={12}>
+                <strong>Status:</strong><br />
+                {selectedTransaction.status}
+              </Col>
+              <Col span={12}>
+                <strong>Amount:</strong><br />
+                {selectedTransaction.amount?.value} {selectedTransaction.amount?.currency}
+              </Col>
+              <Col span={12}>
+                <strong>Type:</strong><br />
+                {selectedTransaction.transactionType}
+              </Col>
+              <Col span={12}>
+                <strong>Sender:</strong><br />
+                {selectedTransaction.senderAccountId}
+              </Col>
+              <Col span={12}>
+                <strong>Receiver:</strong><br />
+                {selectedTransaction.receiverAccountId}
+              </Col>
+              <Col span={24}>
+                <strong>Timestamp:</strong><br />
+                {new Date(selectedTransaction.receivedTimestamp).toLocaleString()}
+              </Col>
+              {selectedTransaction.metadata && (
+                <Col span={24}>
+                  <strong>Metadata:</strong>
+                  <pre style={{ 
+                    background: '#f5f5f5', 
+                    padding: 12, 
+                    borderRadius: 4,
+                    marginTop: 8
+                  }}>
+                    {JSON.stringify(JSON.parse(selectedTransaction.metadata), null, 2)}
+                  </pre>
+                </Col>
+              )}
+            </Row>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
