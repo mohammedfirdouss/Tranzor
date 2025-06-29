@@ -4,6 +4,25 @@ const dynamo = new DynamoDBClient();
 const TABLE_NAME = process.env.TRANSACTIONS_TABLE_NAME;
 const GSI_NAME = 'AccountId-ReceivedTimestamp-index';
 
+// Helper to recursively convert DynamoDB attribute values to JS values
+function fromDynamoDB(item) {
+  if (item.S !== undefined) return item.S;
+  if (item.N !== undefined) return Number(item.N);
+  if (item.BOOL !== undefined) return item.BOOL;
+  if (item.NULL !== undefined) return null;
+  if (item.M !== undefined) {
+    const obj = {};
+    for (const [k, v] of Object.entries(item.M)) {
+      obj[k] = fromDynamoDB(v);
+    }
+    return obj;
+  }
+  if (item.L !== undefined) {
+    return item.L.map(fromDynamoDB);
+  }
+  return item;
+}
+
 exports.handler = async (event) => {
   const accountId = event.pathParameters && event.pathParameters.accountId;
   if (!accountId) {
@@ -69,12 +88,7 @@ exports.handler = async (event) => {
     const txns = (res.Items || []).map(item => {
       const obj = {};
       for (const [k, v] of Object.entries(item)) {
-        if (v.S !== undefined) obj[k] = v.S;
-        else if (v.N !== undefined) obj[k] = Number(v.N);
-        else if (v.M !== undefined) obj[k] = Object.fromEntries(Object.entries(v.M).map(([kk, vv]) => [kk, vv.S || vv.N || vv.BOOL || vv.NULL]));
-        else if (v.BOOL !== undefined) obj[k] = v.BOOL;
-        else if (v.NULL !== undefined) obj[k] = null;
-        else obj[k] = v;
+        obj[k] = fromDynamoDB(v);
       }
       return obj;
     });
