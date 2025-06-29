@@ -71,9 +71,59 @@ export default function TransactionsPage() {
     }
   };
 
+  // Transaction creation form state
+  const [form, setForm] = useState({
+    referenceId: '',
+    senderAccountId: '',
+    receiverAccountId: '',
+    amountValue: '',
+    amountCurrency: 'USD',
+    transactionType: '',
+  });
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = async () => {
+    if (!form.referenceId || !form.senderAccountId || !form.receiverAccountId || !form.amountValue || !form.amountCurrency || !form.transactionType) {
+      message.info('Please fill in all fields to create a transaction.');
+      return;
+    }
+    setCreating(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referenceId: form.referenceId,
+          senderAccountId: form.senderAccountId,
+          receiverAccountId: form.receiverAccountId,
+          amount: { value: form.amountValue, currency: form.amountCurrency },
+          transactionType: form.transactionType
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create transaction');
+      message.success('Transaction created!');
+      setForm({ referenceId: '', senderAccountId: '', receiverAccountId: '', amountValue: '', amountCurrency: 'USD', transactionType: '' });
+      fetchTransactions();
+    } catch (err) {
+      message.error('Error creating transaction');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div>
       <h2>Transactions</h2>
+      {/* Transaction creation form */}
+      <Space style={{ marginBottom: 24 }} direction="vertical">
+        <Input placeholder="Reference ID" value={form.referenceId} onChange={e => setForm(f => ({ ...f, referenceId: e.target.value }))} style={{ width: 200 }} />
+        <Input placeholder="Sender Account ID" value={form.senderAccountId} onChange={e => setForm(f => ({ ...f, senderAccountId: e.target.value }))} style={{ width: 200 }} />
+        <Input placeholder="Receiver Account ID" value={form.receiverAccountId} onChange={e => setForm(f => ({ ...f, receiverAccountId: e.target.value }))} style={{ width: 200 }} />
+        <Input placeholder="Amount Value" value={form.amountValue} onChange={e => setForm(f => ({ ...f, amountValue: e.target.value }))} style={{ width: 120 }} type="number" />
+        <Input placeholder="Amount Currency" value={form.amountCurrency} onChange={e => setForm(f => ({ ...f, amountCurrency: e.target.value }))} style={{ width: 120 }} />
+        <Input placeholder="Transaction Type" value={form.transactionType} onChange={e => setForm(f => ({ ...f, transactionType: e.target.value }))} style={{ width: 200 }} />
+        <Button type="primary" onClick={handleCreate} loading={creating}>Create Transaction</Button>
+      </Space>
       <Space style={{ marginBottom: 16 }}>
         <Input
           placeholder="Account ID"
