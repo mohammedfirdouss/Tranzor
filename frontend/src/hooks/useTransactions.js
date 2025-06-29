@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApi } from './useApi';
 
 export const useTransactions = (accountId, filters = {}) => {
@@ -11,6 +11,12 @@ export const useTransactions = (accountId, filters = {}) => {
   });
   
   const api = useApi();
+  const filtersRef = useRef(filters);
+  
+  // Update filters ref when filters change
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
   const fetchTransactions = useCallback(async (params = {}) => {
     if (!accountId) {
@@ -19,12 +25,13 @@ export const useTransactions = (accountId, filters = {}) => {
     }
 
     try {
+      const currentFilters = filtersRef.current;
       const query = new URLSearchParams({
-        limit: params.pageSize || pagination.pageSize,
-        status: filters.status || '',
-        type: filters.type || '',
-        startDate: filters.startDate || '',
-        endDate: filters.endDate || '',
+        limit: params.pageSize || params.limit || 10,
+        status: currentFilters.status || '',
+        type: currentFilters.type || '',
+        startDate: currentFilters.startDate || '',
+        endDate: currentFilters.endDate || '',
         nextToken: params.nextToken || '',
       });
 
@@ -47,18 +54,18 @@ export const useTransactions = (accountId, filters = {}) => {
       setTransactions([]);
       throw error;
     }
-  }, [accountId, filters, pagination.pageSize, api]);
+  }, [accountId, api]);
 
   const createTransaction = useCallback(async (transactionData) => {
     try {
       const result = await api.post('/v1/transactions', transactionData);
       // Refresh transactions after creation
-      await fetchTransactions();
+      await fetchTransactions({ pageSize: pagination.pageSize });
       return result;
     } catch (error) {
       throw error;
     }
-  }, [api, fetchTransactions]);
+  }, [api, fetchTransactions, pagination.pageSize]);
 
   const getTransactionDetails = useCallback(async (transactionId) => {
     if (!accountId) {
@@ -83,15 +90,22 @@ export const useTransactions = (accountId, filters = {}) => {
 
   const refresh = useCallback(() => {
     setPagination(prev => ({ ...prev, current: 1, nextToken: null }));
-    fetchTransactions({ pageSize: pagination.pageSize, nextToken: null });
-  }, [fetchTransactions, pagination.pageSize]);
+    fetchTransactions({ pageSize: 10, nextToken: null });
+  }, [fetchTransactions]);
 
-  // Auto-fetch when dependencies change
+  // Auto-fetch when accountId changes or filters change
   useEffect(() => {
     if (accountId) {
       refresh();
     }
-  }, [accountId, filters]);
+  }, [accountId, refresh]);
+
+  // Handle filters change separately to avoid infinite loops
+  useEffect(() => {
+    if (accountId) {
+      fetchTransactions({ pageSize: pagination.pageSize, nextToken: null });
+    }
+  }, [filters, accountId, fetchTransactions, pagination.pageSize]);
 
   return {
     transactions,
