@@ -225,7 +225,17 @@ export default function DashboardPage() {
                     fontSize: '12px',
                     overflow: 'auto'
                   }}>
-                    {JSON.stringify(selectedTransaction.metadata, null, 2)}
+                    {(() => {
+                      let meta = selectedTransaction.metadata;
+                      if (typeof meta === 'string') {
+                        try {
+                          meta = JSON.parse(meta);
+                        } catch  {
+                          // fallback: show as is
+                        }
+                      }
+                      return JSON.stringify(meta, null, 2);
+                    })()}
                   </pre>
                 </Col>
               )}
