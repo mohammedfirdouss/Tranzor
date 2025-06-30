@@ -87,7 +87,7 @@ export default function DashboardPage() {
       <div style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <Input
           placeholder="Enter Account ID to load dashboard data"
-          value={accountId}
+        value={accountId}
           onChange={(e) => setAccountId(e.target.value)}
           onKeyPress={handleKeyPress}
           style={{ width: 300, maxWidth: '100%' }}
@@ -180,35 +180,35 @@ export default function DashboardPage() {
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+          <Card>
                 <Statistic 
                   title="Avg Latency" 
                   value={metrics.averageLatency || 0}
                   valueStyle={{ color: '#13c2c2' }}
                   suffix="ms"
                 />
-              </Card>
-            </Col>
+          </Card>
+        </Col>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+          <Card>
                 <Statistic 
                   title="Success Rate" 
                   value={metrics.successRate || 0}
                   valueStyle={{ color: '#52c41a' }}
                   suffix="%"
                 />
-              </Card>
-            </Col>
+          </Card>
+        </Col>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+          <Card>
                 <Statistic 
                   title="Active Alerts" 
                   value={metrics.activeAlerts || 0}
                   valueStyle={{ color: '#ff4d4f' }}
                 />
-              </Card>
-            </Col>
-          </Row>
+          </Card>
+        </Col>
+      </Row>
         )}
 
         <Card 

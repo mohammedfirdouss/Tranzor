@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Select, DatePicker, Input, Button, Tag, Space, Alert } from 'antd';
 import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
 import { useTransactionsQuery } from '../store/api/transactionsApi';
-import { useRealTimeTransactions } from '../hooks/useRealTimeTransactions';
+import { useRealtimeTransactions } from '../hooks/useRealtimeTransactions';
 import VirtualizedTable from '../components/common/VirtualizedTable';
 
 const { RangePicker } = DatePicker;
@@ -19,7 +19,7 @@ export default function TransactionsPage() {
   const { data: transactions = [], isLoading, error, refetch } = useTransactionsQuery();
 
   // Real-time transaction feed
-  const { transactions: realtimeTransactions, isConnected, connectionStatus } = useRealTimeTransactions();
+  const { transactions: realtimeTransactions, isConnected, connectionStatus } = useRealtimeTransactions();
 
   // Combine historical and real-time data
   const allTransactions = [...realtimeTransactions, ...transactions];

@@ -68,6 +68,44 @@ export const authHelpers = {
     localStorage.removeItem('tranzor_auth_token');
     localStorage.removeItem('tranzor_user_info');
   },
+
+  // Sign up confirmation
+  confirmSignUp: (email, code) => {
+    return new Promise((resolve, reject) => {
+      const { CognitoUser } = require('amazon-cognito-identity-js');
+      const userData = {
+        Username: email,
+        Pool: userPool,
+      };
+      const cognitoUser = new CognitoUser(userData);
+      cognitoUser.confirmRegistration(code, true, (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  },
+
+  // Resend sign up code
+  resendSignUpCode: (email) => {
+    return new Promise((resolve, reject) => {
+      const { CognitoUser } = require('amazon-cognito-identity-js');
+      const userData = {
+        Username: email,
+        Pool: userPool,
+      };
+      const cognitoUser = new CognitoUser(userData);
+      cognitoUser.resendConfirmationCode((err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  },
 };
 
 export default cognitoConfig; 

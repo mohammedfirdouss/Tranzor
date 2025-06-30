@@ -146,6 +146,16 @@ export const AuthProvider = ({ children }) => {
     return hasPermission('admin') || hasPermission('Admin');
   };
 
+  // Confirm sign up
+  const confirmSignUp = async (email, code) => {
+    return authHelpers.confirmSignUp(email, code);
+  };
+
+  // Resend sign up code
+  const resendSignUpCode = async (email) => {
+    return authHelpers.resendSignUpCode(email);
+  };
+
   const value = {
     user,
     loading,
@@ -154,6 +164,8 @@ export const AuthProvider = ({ children }) => {
     signOut,
     hasPermission,
     isAdmin,
+    confirmSignUp,
+    resendSignUpCode,
   };
 
   return (

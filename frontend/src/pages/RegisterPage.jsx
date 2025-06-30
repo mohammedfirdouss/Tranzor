@@ -19,7 +19,7 @@ export default function RegisterPage() {
     setSuccess(null);
     try {
       await register(values).unwrap();
-      setSuccess('Registration successful! Please check your email for a verification code.');
+      navigate('/confirm-signup', { state: { email: values.email } });
     } catch (err) {
       setError(err.data?.message || 'Registration failed');
     }
@@ -29,15 +29,6 @@ export default function RegisterPage() {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <Card style={{ width: 350 }}>
         <Title level={3} style={{ textAlign: 'center' }}>Sign Up</Title>
-        {success && (
-          <Alert
-            type="success"
-            message={success}
-            showIcon
-            style={{ marginBottom: 16 }}
-            action={<Button type="link" href="/confirm">Enter Verification Code</Button>}
-          />
-        )}
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Please enter your email' }]}> 

@@ -21,6 +21,7 @@ import TransactionsPage from './pages/TransactionsPage';
 import FraudAlertsPage from './pages/FraudAlertsPage';
 import AuditTrailPage from './pages/AuditTrailPage';
 import SettingsPage from './pages/SettingsPage';
+import ConfirmSignUpPage from './pages/ConfirmSignUpPage';
 
 const { Header, Sider, Content } = Layout;
 
@@ -233,7 +234,7 @@ function AppLayout() {
           role="main"
         >
           <ErrorBoundary>
-            <Routes>
+          <Routes>
               <Route path="/" element={
                 <ProtectedRoute>
                   <DashboardPage />
@@ -259,7 +260,7 @@ function AppLayout() {
                   <SettingsPage />
                 </ProtectedRoute>
               } />
-            </Routes>
+          </Routes>
           </ErrorBoundary>
         </Content>
       </Layout>
@@ -271,14 +272,15 @@ export default function App() {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <Router>
+    <Router>
           <ErrorBoundary>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
               <Route path="/*" element={<AppLayout />} />
             </Routes>
           </ErrorBoundary>
-        </Router>
+    </Router>
       </AuthProvider>
     </Provider>
   );
