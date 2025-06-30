@@ -21,7 +21,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await signIn(values.username, values.password);
+      await signIn(values.email, values.password);
       // Redirect to the page they were trying to access
       navigate(from, { replace: true });
     } catch (err) {
@@ -76,19 +76,36 @@ export default function LoginPage() {
           size="large"
         >
           <Form.Item
-            name="username"
-            label="Username"
+            name="email"
+            label="Email"
             rules={[
               {
                 required: true,
-                message: 'Please enter your username!',
+                message: 'Please enter your email!',
+                type: 'email',
               },
             ]}
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="Enter your username"
-              autoComplete="username"
+              placeholder="Enter your email"
+              autoComplete="email"
+            />
+          </Form.Item>
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[
+              {
+                required: true,
+                message: 'Please enter your name!',
+              },
+            ]}
+          >
+            <Input
+              prefix={<UserOutlined />}
+              placeholder="Enter your name"
+              autoComplete="name"
             />
           </Form.Item>
 

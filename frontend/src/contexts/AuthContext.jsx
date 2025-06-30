@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { message } from 'antd';
-import { authHelpers } from '../config/cognito';
+import { CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
+import { userPool, authHelpers } from '../config/cognito';
 
 const AuthContext = createContext();
 
@@ -60,20 +61,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Sign in function
-  const signIn = async (username, password) => {
+  const signIn = async (email, password) => {
     try {
       setLoading(true);
       
       return new Promise((resolve, reject) => {
-        const { CognitoUser, AuthenticationDetails } = require('amazon-cognito-identity-js');
-        
         const cognitoUser = new CognitoUser({
-          Username: username,
-          Pool: require('../config/cognito').userPool,
+          Username: email,
+          Pool: userPool,
         });
 
         const authDetails = new AuthenticationDetails({
-          Username: username,
+          Username: email,
           Password: password,
         });
 
@@ -173,4 +172,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};

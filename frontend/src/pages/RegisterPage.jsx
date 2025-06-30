@@ -14,7 +14,8 @@ export default function RegisterPage() {
   const onFinish = async (values) => {
     setError(null);
     try {
-      await register(values).unwrap();
+      // Only send email and password to backend
+      await register({ email: values.email, password: values.password }).unwrap();
       navigate('/confirm-signup', { state: { email: values.email } });
     } catch (err) {
       setError(err.data?.message || 'Registration failed');
@@ -49,7 +50,10 @@ export default function RegisterPage() {
         </div>
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
         <Form layout="vertical" onFinish={onFinish} size="large">
-          <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Please enter your email' }]}> 
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter your name' }]}> 
+            <Input autoComplete="name" placeholder="Enter your name" />
+          </Form.Item>
+          <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Please enter your email', type: 'email' }]}> 
             <Input type="email" autoComplete="email" placeholder="Enter your email" />
           </Form.Item>
           <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter your password' }]}> 
