@@ -1,6 +1,7 @@
 const { DynamoDBClient, TransactWriteItemsCommand } = require('@aws-sdk/client-dynamodb');
 const { v4: uuidv4 } = require('uuid');
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
+const { verifyJwt } = require('./auth');
 
 const dynamo = new DynamoDBClient();
 const sqs = new SQSClient();
@@ -9,6 +10,8 @@ const QUEUE_URL = process.env.TRANSACTION_QUEUE_URL;
 
 exports.handler = async (event) => {
   try {
+    verifyJwt(event);
+
     const body = JSON.parse(event.body || '{}');
     const required = ['referenceId', 'senderAccountId', 'receiverAccountId', 'amount', 'transactionType'];
     for (const field of required) {
@@ -108,4 +111,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'Internal server error' })
     };
   }
-}; 
+};

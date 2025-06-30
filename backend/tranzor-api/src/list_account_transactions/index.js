@@ -1,4 +1,5 @@
 const { DynamoDBClient, QueryCommand } = require('@aws-sdk/client-dynamodb');
+const { verifyJwt } = require('./auth');
 
 const dynamo = new DynamoDBClient();
 const TABLE_NAME = process.env.TRANSACTIONS_TABLE_NAME;
@@ -24,6 +25,15 @@ function fromDynamoDB(item) {
 }
 
 exports.handler = async (event) => {
+  try {
+    verifyJwt(event);
+  } catch (err) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ message: 'Unauthorized' })
+    };
+  }
+
   const accountId = event.pathParameters && event.pathParameters.accountId;
   if (!accountId) {
     return {
@@ -108,4 +118,4 @@ exports.handler = async (event) => {
       body: JSON.stringify({ message: 'Internal server error' })
     };
   }
-}; 
+};

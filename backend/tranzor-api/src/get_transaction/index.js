@@ -1,4 +1,5 @@
 const { DynamoDBClient, GetItemCommand } = require('@aws-sdk/client-dynamodb');
+const { verifyJwt } = require('./auth');
 
 const dynamo = new DynamoDBClient();
 const TABLE_NAME = process.env.TRANSACTIONS_TABLE_NAME;
@@ -23,41 +24,49 @@ function fromDynamoDB(item) {
 }
 
 exports.handler = async (event) => {
-  const transactionId = event.pathParameters && event.pathParameters.transactionId;
-  // Accept accountId as a query string parameter
-  const accountId = event.queryStringParameters && event.queryStringParameters.accountId;
-  if (!transactionId || !accountId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ message: 'Missing transactionId or accountId' })
-    };
-  }
   try {
-    const res = await dynamo.send(new GetItemCommand({
-      TableName: TABLE_NAME,
-      Key: { transactionId: { S: transactionId }, accountId: { S: accountId } }
-    }));
-    if (!res.Item) {
+    verifyJwt(event);
+    const transactionId = event.pathParameters && event.pathParameters.transactionId;
+    // Accept accountId as a query string parameter
+    const accountId = event.queryStringParameters && event.queryStringParameters.accountId;
+    if (!transactionId || !accountId) {
       return {
-        statusCode: 404,
-        body: JSON.stringify({ message: 'Transaction not found' })
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Missing transactionId or accountId' })
       };
     }
-    // Convert DynamoDB item to plain JS object
-    const item = {};
-    for (const [k, v] of Object.entries(res.Item)) {
-      item[k] = fromDynamoDB(v);
+    try {
+      const res = await dynamo.send(new GetItemCommand({
+        TableName: TABLE_NAME,
+        Key: { transactionId: { S: transactionId }, accountId: { S: accountId } }
+      }));
+      if (!res.Item) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({ message: 'Transaction not found' })
+        };
+      }
+      // Convert DynamoDB item to plain JS object
+      const item = {};
+      for (const [k, v] of Object.entries(res.Item)) {
+        item[k] = fromDynamoDB(v);
+      }
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item)
+      };
+    } catch (err) {
+      console.error('Error fetching transaction:', err);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'Internal server error' })
+      };
     }
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(item)
-    };
   } catch (err) {
-    console.error('Error fetching transaction:', err);
     return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Internal server error' })
+      statusCode: 401,
+      body: JSON.stringify({ message: 'Unauthorized' })
     };
   }
 };
