@@ -1,79 +1,95 @@
 import { useState, useCallback } from 'react';
-import { message } from 'antd';
+import { authHelpers } from '../config/cognito';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 export const useApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const apiCall = useCallback(async (endpoint, options = {}) => {
+  const getAuthHeaders = useCallback(async () => {
+    try {
+      const token = await authHelpers.getAccessToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
+    } catch (error) {
+      console.error('Failed to get auth token:', error);
+      // Return headers without auth token - API will handle 401
+      return {
+        'Content-Type': 'application/json',
+      };
+    }
+  }, []);
+
+  const request = useCallback(async (endpoint, options = {}) => {
     setLoading(true);
     setError(null);
 
     try {
-      const url = `${API_BASE_URL}${endpoint}`;
-      const response = await fetch(url, {
+      const headers = await getAuthHeaders();
+      
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
         headers: {
-          'Content-Type': 'application/json',
+          ...headers,
           ...options.headers,
         },
-        ...options,
       });
 
       if (!response.ok) {
+        // Handle 401 Unauthorized - redirect to login
+        if (response.status === 401) {
+          authHelpers.signOut();
+          window.location.href = '/login';
+          throw new Error('Authentication required');
+        }
+
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       return data;
     } catch (err) {
-      const errorMessage = err.message || 'An unexpected error occurred';
-      setError(errorMessage);
-      
-      if (!options.silent) {
-        message.error(errorMessage);
-      }
-      
+      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getAuthHeaders]);
 
-  const get = useCallback((endpoint, options = {}) => {
-    return apiCall(endpoint, { method: 'GET', ...options });
-  }, [apiCall]);
+  const get = useCallback((endpoint) => {
+    return request(endpoint, { method: 'GET' });
+  }, [request]);
 
-  const post = useCallback((endpoint, data, options = {}) => {
-    return apiCall(endpoint, {
+  const post = useCallback((endpoint, body) => {
+    return request(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
-      ...options,
+      body: JSON.stringify(body),
     });
-  }, [apiCall]);
+  }, [request]);
 
-  const put = useCallback((endpoint, data, options = {}) => {
-    return apiCall(endpoint, {
+  const put = useCallback((endpoint, body) => {
+    return request(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(data),
-      ...options,
+      body: JSON.stringify(body),
     });
-  }, [apiCall]);
+  }, [request]);
 
-  const del = useCallback((endpoint, options = {}) => {
-    return apiCall(endpoint, { method: 'DELETE', ...options });
-  }, [apiCall]);
+  const del = useCallback((endpoint) => {
+    return request(endpoint, { method: 'DELETE' });
+  }, [request]);
 
   return {
     loading,
     error,
+    request,
     get,
     post,
     put,
     delete: del,
-    clearError: () => setError(null),
   };
 };
 

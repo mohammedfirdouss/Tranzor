@@ -1,25 +1,26 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Dropdown, Avatar, Space } from 'antd';
 import {
   DashboardOutlined,
   TableOutlined,
   AlertOutlined,
   FileSearchOutlined,
   SettingOutlined,
+  UserOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import TransactionsPage from './pages/TransactionsPage';
 import FraudAlertsPage from './pages/FraudAlertsPage';
 import AuditTrailPage from './pages/AuditTrailPage';
 import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import RequireAuth from './components/common/RequireAuth';
-import UserMenu from './components/common/UserMenu';
 
 const { Header, Sider, Content } = Layout;
 
@@ -100,8 +101,66 @@ function getSelectedKey(pathname) {
   return '';
 }
 
+function UserMenu() {
+  const { user, signOut } = useAuth();
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+      onClick: () => {
+        // TODO: Navigate to profile page
+        console.log('Profile clicked');
+      },
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Sign Out',
+      onClick: signOut,
+    },
+  ];
+
+  return (
+    <Dropdown
+      menu={{ items: userMenuItems }}
+      placement="bottomRight"
+      trigger={['click']}
+    >
+      <Space style={{ cursor: 'pointer', color: '#666' }}>
+        <Avatar icon={<UserOutlined />} />
+        <span>{user?.name || user?.username || 'User'}</span>
+      </Space>
+    </Dropdown>
+  );
+}
+
 function AppLayout() {
   const location = useLocation();
+  const { isAuthenticated, loading } = useAuth();
+  
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+      }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // If not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
   
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -140,9 +199,7 @@ function AppLayout() {
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
             Transaction Management System
           </h1>
-          <div style={{ color: '#666' }}>
-            <UserMenu />
-          </div>
+          <UserMenu />
         </Header>
         <Content 
           style={{ 
@@ -155,15 +212,31 @@ function AppLayout() {
         >
           <ErrorBoundary>
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route element={<RequireAuth />}>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/transactions" element={<TransactionsPage />} />
-                <Route path="/fraud-alerts" element={<FraudAlertsPage />} />
-                <Route path="/audit-trail" element={<AuditTrailPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Route>
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/transactions" element={
+                <ProtectedRoute>
+                  <TransactionsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/fraud-alerts" element={
+                <ProtectedRoute>
+                  <FraudAlertsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/audit-trail" element={
+                <ProtectedRoute>
+                  <AuditTrailPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } />
             </Routes>
           </ErrorBoundary>
         </Content>
@@ -175,11 +248,16 @@ function AppLayout() {
 export default function App() {
   return (
     <Provider store={store}>
-      <Router>
-        <ErrorBoundary>
-          <AppLayout />
-        </ErrorBoundary>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/*" element={<AppLayout />} />
+            </Routes>
+          </ErrorBoundary>
+        </Router>
+      </AuthProvider>
     </Provider>
   );
 }
