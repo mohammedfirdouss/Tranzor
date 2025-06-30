@@ -10,6 +10,12 @@ const client = jwksClient({
   jwksUri: JWKS_URI
 });
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type,Authorization",
+  "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
+};
+
 function getKey(header, callback) {
   client.getSigningKey(header.kid, function (err, key) {
     if (err) {
@@ -28,10 +34,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 401,
         body: JSON.stringify({ message: 'Missing or invalid Authorization header' }),
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "Content-Type,Authorization"
-        }
+        headers: corsHeaders
       };
     }
     const token = authHeader.replace('Bearer ', '');
@@ -50,29 +53,20 @@ exports.handler = async (event) => {
       return {
         statusCode: 401,
         body: JSON.stringify({ message: 'Invalid or expired token' }),
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "Content-Type,Authorization"
-        }
+        headers: corsHeaders
       };
     }
     // Return user info from token
     return {
       statusCode: 200,
       body: JSON.stringify({ user: payload }),
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type,Authorization"
-      }
+      headers: corsHeaders
     };
   } catch (err) {
     return {
       statusCode: 500,
       body: JSON.stringify({ message: 'Internal server error' }),
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type,Authorization"
-      }
+      headers: corsHeaders
     };
   }
 };
