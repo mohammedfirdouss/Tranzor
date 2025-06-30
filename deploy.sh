@@ -23,22 +23,34 @@ fi
 echo "📦 Deploying backend..."
 cd backend/tranzor-api
 sam build
-sam deploy
+# Run sam deploy, but allow exit code 0 (success) or 255 (no changes) to continue
+echo "Deploying backend with SAM..."
+sam deploy || [ $? -eq 255 ]
 cd ../..
+
+# Wait for backend resources to be fully available
+sleep 15
 
 # Get API Gateway URL from SAM output
 API_URL=$(aws cloudformation describe-stacks --stack-name Tranzor --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
 
-# Update frontend environment with API URL
+# Get Cognito UserPoolId and ClientId from SAM output
+USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name Tranzor --query 'Stacks[0].Outputs[?contains(OutputKey, `UserPoolId`)].OutputValue' --output text)
+CLIENT_ID=$(aws cloudformation describe-stacks --stack-name Tranzor --query 'Stacks[0].Outputs[?contains(OutputKey, `ClientId`)].OutputValue' --output text)
+
+# Update frontend environment with API URL and Cognito values
 echo "🔧 Updating frontend environment..."
 cat > frontend/.env.production << EOF
 VITE_API_BASE_URL=$API_URL
+VITE_COGNITO_USER_POOL_ID=$USER_POOL_ID
+VITE_COGNITO_CLIENT_ID=$CLIENT_ID
 VITE_DEV_MODE=false
 EOF
 
 # Deploy frontend
 echo "📦 Deploying frontend..."
 cd frontend
+npm install
 npm run build
 
 # Deploy to S3/CloudFront (you'll need to set up S3 bucket and CloudFront distribution)
