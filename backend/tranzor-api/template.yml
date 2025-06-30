@@ -55,11 +55,19 @@ Resources:
         Variables:
           TRANSACTIONS_TABLE_NAME:
             Ref: TransactionsTable
+          AUDIT_LOGS_TABLE_NAME:
+            Ref: AuditLogsTable
+          FRAUD_CHECKS_TABLE_NAME:
+            Ref: FraudChecksTable
       Policies:
         - SQSPollerPolicy:
             QueueName: !Ref TransactionProcessingQueue
         - DynamoDBCrudPolicy:
             TableName: !Ref TransactionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AuditLogsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref FraudChecksTable
       Events:
         SQSTransactionProcessing:
           Type: SQS
@@ -292,6 +300,72 @@ Resources:
         AllowOrigin: "'*'"
         AllowHeaders: "'Content-Type,Authorization'"
         AllowMethods: "'OPTIONS,GET,POST'"
+
+  AuditLogsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AuditLogs
+      AttributeDefinitions:
+        - AttributeName: logId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: eventType
+          AttributeType: S
+        - AttributeName: entityId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: logId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: EventType-Timestamp-index
+          KeySchema:
+            - AttributeName: eventType
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: EntityId-Timestamp-index
+          KeySchema:
+            - AttributeName: entityId
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+
+  FraudChecksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: FraudChecks
+      AttributeDefinitions:
+        - AttributeName: fraudCheckId
+          AttributeType: S
+        - AttributeName: transactionId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: fraudCheckId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: TransactionId-Timestamp-index
+          KeySchema:
+            - AttributeName: transactionId
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
 
 Outputs:
   TransactionsTableName:
