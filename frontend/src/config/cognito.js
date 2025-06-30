@@ -1,4 +1,4 @@
-import { CognitoUserPool } from 'amazon-cognito-identity-js';
+import { CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
 
 // Cognito configuration
 const cognitoConfig = {
@@ -72,7 +72,6 @@ export const authHelpers = {
   // Sign up confirmation
   confirmSignUp: (email, code) => {
     return new Promise((resolve, reject) => {
-      const { CognitoUser } = require('amazon-cognito-identity-js');
       const userData = {
         Username: email,
         Pool: userPool,
@@ -91,7 +90,6 @@ export const authHelpers = {
   // Resend sign up code
   resendSignUpCode: (email) => {
     return new Promise((resolve, reject) => {
-      const { CognitoUser } = require('amazon-cognito-identity-js');
       const userData = {
         Username: email,
         Pool: userPool,

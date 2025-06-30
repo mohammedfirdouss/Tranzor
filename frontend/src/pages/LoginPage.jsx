@@ -125,6 +125,12 @@ export default function LoginPage() {
               {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </Form.Item>
+          <Form.Item style={{ marginBottom: 0 }}>
+            <div style={{ textAlign: 'center' }}>
+              Don't have an account?{' '}
+              <a href="/register">Sign up</a>
+            </div>
+          </Form.Item>
         </Form>
 
         <div style={{ textAlign: 'center', marginTop: '24px' }}>

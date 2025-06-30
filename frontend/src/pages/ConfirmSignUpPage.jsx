@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Alert, Typography } from 'antd';
+import { Form, Input, Button, Alert, Typography, Card } from 'antd';
+import { LoginOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 
@@ -52,24 +53,64 @@ export default function ConfirmSignUpPage() {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '60px auto', padding: 24, background: '#fff', borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-      <Typography.Title level={3} style={{ textAlign: 'center' }}>Confirm Your Account</Typography.Title>
-      <Form form={form} layout="vertical" onFinish={onFinish}>
-        <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please enter your email' }]}> 
-          <Input autoFocus autoComplete="email" aria-label="Email" />
-        </Form.Item>
-        <Form.Item label="Verification Code" name="code" rules={[{ required: true, message: 'Please enter the verification code' }]}> 
-          <Input autoComplete="one-time-code" aria-label="Verification code" />
-        </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} block>Confirm</Button>
-        </Form.Item>
-        <Form.Item>
-          <Button type="link" onClick={handleResend} loading={resendLoading} block>Resend Code</Button>
-        </Form.Item>
-      </Form>
-      {success && <Alert type="success" message={success} showIcon style={{ marginTop: 16 }} />}
-      {error && <Alert type="error" message={error} showIcon style={{ marginTop: 16 }} />}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
+    }}>
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          borderRadius: '12px'
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <Typography.Title level={2} style={{ margin: 0, color: '#1890ff' }}>
+            <LoginOutlined style={{ marginRight: '8px' }} />
+            Tranzor Admin
+          </Typography.Title>
+          <Typography.Text type="secondary">
+            Confirm your account to access the transaction management system
+          </Typography.Text>
+        </div>
+        <Form form={form} layout="vertical" onFinish={onFinish} size="large">
+          <Form.Item label="Email" name="email" rules={[{ required: true, message: 'Please enter your email' }]}> 
+            <Input autoFocus autoComplete="email" aria-label="Email" placeholder="Enter your email" />
+          </Form.Item>
+          <Form.Item label="Verification Code" name="code" rules={[{ required: true, message: 'Please enter the verification code' }]}> 
+            <Input autoComplete="one-time-code" aria-label="Verification code" placeholder="Enter verification code" />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block style={{
+              width: '100%',
+              height: '48px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600'
+            }}>Confirm</Button>
+          </Form.Item>
+          <Form.Item>
+            <Button type="link" onClick={handleResend} loading={resendLoading} block>Resend Code</Button>
+          </Form.Item>
+          <Form.Item style={{ marginBottom: 0 }}>
+            <div style={{ textAlign: 'center' }}>
+              <a href="/login">Back to Login</a>
+            </div>
+          </Form.Item>
+        </Form>
+        {success && <Alert type="success" message={success} showIcon style={{ marginTop: 16 }} />}
+        {error && <Alert type="error" message={error} showIcon style={{ marginTop: 16 }} />}
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+            Secure authentication powered by AWS Cognito
+          </Typography.Text>
+        </div>
+      </Card>
     </div>
   );
-} 
+}
