@@ -1,160 +1,387 @@
-#  Tranzor
+# Tranzor API - Backend Service
 
-This project contains source code and supporting files for a serverless application that you can deploy with the AWS Serverless Application Model (AWS SAM) command line interface (CLI). It includes the following files and folders:
+A serverless, real-time financial transaction processing API built with AWS SAM, designed to handle high-volume transaction processing with fraud detection and audit capabilities.
 
-- `src` - Code for the application's Lambda function.
-- `events` - Invocation events that you can use to invoke the function.
-- `__tests__` - Unit tests for the application code. 
-- `template.yaml` - A template that defines the application's AWS resources.
+## 🏗️ Architecture Overview
 
-The application uses several AWS resources, including Lambda functions, an API Gateway API, and Amazon DynamoDB tables. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+Tranzor API is built on AWS serverless architecture using:
 
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
-The AWS Toolkit is an open-source plugin for popular IDEs that uses the AWS SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds step-through debugging for Lambda function code. 
+- **AWS Lambda** for compute
+- **Amazon DynamoDB** for data storage
+- **Amazon SQS** for message queuing
+- **API Gateway** for REST API endpoints
+- **AWS Cognito** for authentication
+- **CloudWatch** for monitoring and logging
 
-To get started, see the following:
+## 🚀 Features
 
-* [CLion](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [GoLand](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [IntelliJ](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [WebStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [Rider](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PhpStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [RubyMine](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [DataGrip](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [VS Code](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/welcome.html)
-* [Visual Studio](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/welcome.html)
+### ✅ Core Functionality
+- **Real-time Transaction Processing**: High-throughput transaction ingestion and processing
+- **Fraud Detection**: Automated fraud scoring and alert generation
+- **Audit Trail**: Comprehensive logging of all system activities
+- **User Management**: Secure authentication and authorization
+- **Scalable Architecture**: Auto-scaling based on demand
+- **High Availability**: Multi-AZ deployment with fault tolerance
 
-## Deploy the sample application
+### 🔒 Security & Compliance
+- **AWS Cognito Integration**: Secure user authentication
+- **DynamoDB Encryption**: Data encrypted at rest and in transit
+- **IAM Roles**: Least privilege access control
+- **API Gateway Security**: Request validation and throttling
+- **Audit Logging**: Complete activity tracking for compliance
 
-The AWS SAM CLI is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
+### 📊 Performance & Monitoring
+- **Real-time Metrics**: Transaction throughput and latency monitoring
+- **CloudWatch Integration**: Comprehensive logging and alerting
+- **Auto-scaling**: Lambda functions scale automatically
+- **Queue Management**: SQS for reliable message processing
 
-To use the AWS SAM CLI, you need the following tools:
+## 🏛️ System Architecture
 
-* AWS SAM CLI - [Install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
-* Node.js - [Install Node.js 22](https://nodejs.org/en/), including the npm package management tool.
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community).
-
-To build and deploy your application for the first time, run the following in your shell:
-
-```bash
-sam build
-sam deploy --guided
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        A[Frontend App]
+        B[Mobile App]
+        C[Third-party APIs]
+    end
+    
+    subgraph "API Gateway"
+        D[API Gateway]
+        E[Rate Limiting]
+        F[Authentication]
+    end
+    
+    subgraph "Lambda Functions"
+        G[Process Transaction]
+        H[Get Transaction]
+        I[List Transactions]
+        J[Transaction Processor]
+        K[Register User]
+        L[Login User]
+    end
+    
+    subgraph "Data Layer"
+        M[(Transactions Table)]
+        N[(Users Table)]
+        O[(Audit Logs Table)]
+        P[(Fraud Checks Table)]
+    end
+    
+    subgraph "Message Queue"
+        Q[SQS Queue]
+    end
+    
+    subgraph "Authentication"
+        R[AWS Cognito]
+    end
+    
+    A --> D
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+    F --> I
+    F --> K
+    F --> L
+    G --> Q
+    Q --> J
+    J --> M
+    J --> O
+    J --> P
+    H --> M
+    I --> M
+    K --> R
+    L --> R
+    K --> N
 ```
 
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
+## 📁 Project Structure
 
-* **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
-* **AWS Region**: The AWS region you want to deploy your app to.
-* **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
-* **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
-* **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
-
-The API Gateway endpoint API will be displayed in the outputs when the deployment is complete.
-
-## Use the AWS SAM CLI to build and test locally
-
-Build your application by using the `sam build` command.
-
-```bash
-my-application$ sam build
+```
+tranzor-api/
+├── src/
+│   ├── auth/                    # Authentication handlers
+│   │   ├── login.js            # User login
+│   │   └── register.js         # User registration
+│   ├── transaction_processor/   # SQS message processor
+│   │   └── index.js            # Main processor logic
+│   ├── process_transaction/     # Transaction creation
+│   │   └── index.js            # POST /transactions
+│   ├── get_transaction/         # Transaction retrieval
+│   │   └── index.js            # GET /transactions/{id}
+│   └── list_account_transactions/ # Account transactions
+│       └── index.js            # GET /accounts/{id}/transactions
+├── events/                      # Test events for local testing
+├── __tests__/                   # Unit tests
+├── template.yml                 # AWS SAM template
+├── buildspec.yml               # AWS CodeBuild configuration
+└── package.json                # Dependencies
 ```
 
-The AWS SAM CLI installs dependencies that are defined in `package.json`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+## 🔧 API Endpoints
 
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
+### Authentication
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User authentication
 
-Run functions locally and invoke them with the `sam local invoke` command.
+### Transactions
+- `POST /v1/transactions` - Create new transaction
+- `GET /v1/transactions/{transactionId}` - Get transaction details
+- `GET /v1/accounts/{accountId}/transactions` - List account transactions
 
-```bash
-my-application$ sam local invoke putItemFunction --event events/event-post-item.json
-my-application$ sam local invoke getAllItemsFunction --event events/event-get-all-items.json
+### Response Format
+```json
+{
+  "success": true,
+  "data": {
+    "transactionId": "TXN123456",
+    "accountId": "ACC000001",
+    "amount": 100.50,
+    "currency": "USD",
+    "status": "Pending",
+    "timestamp": "2024-01-01T12:00:00Z"
+  },
+  "message": "Transaction processed successfully"
+}
 ```
 
-The AWS SAM CLI can also emulate your application's API. Use the `sam local start-api` command to run the API locally on port 3000.
+## 🚀 Deployment
 
+### Prerequisites
+- AWS CLI configured with appropriate permissions
+- AWS SAM CLI installed
+- Node.js 18+ installed
+- Docker (for local testing)
+
+### Quick Start
+
+1. **Clone and Setup**
+   ```bash
+   cd backend/tranzor-api
+   npm install
+   ```
+
+2. **Build the Application**
+   ```bash
+   sam build
+   ```
+
+3. **Deploy to AWS**
+   ```bash
+   sam deploy --guided
+   ```
+
+4. **Follow the prompts:**
+   - Stack Name: `tranzor-api`
+   - AWS Region: Choose your preferred region
+   - Confirm changes: `y`
+   - Allow IAM role creation: `y`
+   - Save arguments: `y`
+
+### Environment Variables
+
+The following environment variables are automatically configured:
+
+- `TRANSACTIONS_TABLE_NAME` - DynamoDB table for transactions
+- `USERS_TABLE_NAME` - DynamoDB table for users
+- `AUDIT_LOGS_TABLE_NAME` - DynamoDB table for audit logs
+- `FRAUD_CHECKS_TABLE_NAME` - DynamoDB table for fraud checks
+- `COGNITO_USER_POOL_ID` - AWS Cognito User Pool ID
+- `COGNITO_USER_POOL_CLIENT_ID` - AWS Cognito Client ID
+
+## 🧪 Testing
+
+### Local Testing
 ```bash
-my-application$ sam local start-api
-my-application$ curl http://localhost:3000/
+# Start local API
+sam local start-api
+
+# Test endpoints
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"Password123!"}'
+
+curl -X POST http://localhost:3000/v1/transactions \
+  -H "Content-Type: application/json" \
+  -d '{"accountId":"ACC000001","amount":100.50,"currency":"USD"}'
 ```
 
-The AWS SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
+### Unit Tests
+```bash
+npm test
+```
+
+### Integration Tests
+```bash
+# Deploy to test environment
+sam deploy --config-env test
+
+# Run integration tests
+npm run test:integration
+```
+
+## 📊 Monitoring & Logging
+
+### CloudWatch Metrics
+- Transaction processing rate
+- Lambda function duration and errors
+- DynamoDB read/write capacity
+- SQS queue depth
+
+### CloudWatch Logs
+- Lambda function execution logs
+- API Gateway access logs
+- Error tracking and debugging
+
+### Alerts
+- High error rates
+- Queue depth thresholds
+- Performance degradation
+
+## 🔒 Security
+
+### Authentication Flow
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant AG as API Gateway
+    participant L as Lambda
+    participant C as Cognito
+    participant DB as DynamoDB
+    
+    C->>AG: POST /auth/register
+    AG->>L: Invoke Register Function
+    L->>C: Create User
+    C->>DB: Store User Data
+    L->>AG: Return Success
+    
+    C->>AG: POST /auth/login
+    AG->>L: Invoke Login Function
+    L->>C: Authenticate User
+    C->>L: Return JWT Token
+    L->>AG: Return Token
+    
+    C->>AG: API Request + JWT
+    AG->>L: Validate Token
+    L->>AG: Process Request
+    AG->>C: Return Response
+```
+
+### Data Protection
+- **Encryption at Rest**: All DynamoDB tables encrypted with AWS KMS
+- **Encryption in Transit**: TLS 1.2+ for all API communications
+- **Access Control**: IAM roles with least privilege principle
+- **Audit Logging**: Complete activity tracking
+
+## 📈 Performance
+
+### Scalability
+- **Auto-scaling**: Lambda functions scale from 0 to thousands of concurrent executions
+- **Queue Management**: SQS handles message buffering and retry logic
+- **Database Optimization**: DynamoDB auto-scaling with on-demand capacity
+
+### Performance Targets
+- **Latency**: < 100ms for transaction processing
+- **Throughput**: 10,000+ transactions per second
+- **Availability**: 99.9% uptime SLA
+- **Durability**: 99.999999999% data durability
+
+## 🛠️ Development
+
+### Adding New Endpoints
+1. Create new Lambda function in `src/`
+2. Add function definition to `template.yml`
+3. Configure API Gateway events
+4. Add IAM permissions
+5. Update tests
+
+### Local Development
+```bash
+# Start local development
+sam local start-api --env-vars env.json
+
+# Watch for changes
+sam build --use-container --watch
+```
+
+### Code Quality
+- ESLint for code linting
+- Prettier for code formatting
+- Jest for unit testing
+- Coverage reporting
+
+## 🔄 CI/CD Pipeline
+
+### AWS CodeBuild Integration
+The project includes `buildspec.yml` for automated deployment:
 
 ```yaml
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /
-            Method: GET
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+  build:
+    commands:
+      - npm install
+      - npm test
+      - sam build
+      - sam deploy --no-confirm-changeset
 ```
 
-## Add a resource to your application
-The application template uses AWS SAM to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources, such as functions, triggers, and APIs. For resources that aren't included in the [AWS SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use the standard [AWS CloudFormation resource types](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+### Deployment Stages
+1. **Development**: Automatic deployment on push to `develop` branch
+2. **Staging**: Manual deployment from `staging` branch
+3. **Production**: Manual deployment from `main` branch
 
-Update `template.yaml` to add a dead-letter queue to your application. In the **Resources** section, add a resource named **MyQueue** with the type **AWS::SQS::Queue**. Then add a property to the **AWS::Serverless::Function** resource named **DeadLetterQueue** that targets the queue's Amazon Resource Name (ARN), and a policy that grants the function permission to access the queue.
+## 🚨 Troubleshooting
 
-```
-Resources:
-  MyQueue:
-    Type: AWS::SQS::Queue
-  getAllItemsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: src/handlers/get-all-items.getAllItemsHandler
-      Runtime: nodejs18.x
-      DeadLetterQueue:
-        Type: SQS 
-        TargetArn: !GetAtt MyQueue.Arn
-      Policies:
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MyQueue.QueueName
-```
+### Common Issues
 
-The dead-letter queue is a location for Lambda to send events that could not be processed. It's only used if you invoke your function asynchronously, but it's useful here to show how you can modify your application's resources and function configuration.
+**Lambda Timeout**
+- Increase timeout in `template.yml`
+- Optimize function code
+- Check DynamoDB performance
 
-Deploy the updated application.
+**CORS Errors**
+- Verify CORS configuration in API Gateway
+- Check frontend origin settings
 
+**Authentication Failures**
+- Verify Cognito configuration
+- Check JWT token expiration
+- Validate user pool settings
+
+### Debug Commands
 ```bash
-my-application$ sam deploy
+# View logs
+sam logs -n ProcessTransactionFunction --stack-name tranzor-api --tail
+
+# Test function locally
+sam local invoke ProcessTransactionFunction --event events/event-post-transaction.json
+
+# Check deployment status
+aws cloudformation describe-stacks --stack-name tranzor-api
 ```
 
-Open the [**Applications**](https://console.aws.amazon.com/lambda/home#/applications) page of the Lambda console, and choose your application. When the deployment completes, view the application resources on the **Overview** tab to see the new resource. Then, choose the function to see the updated configuration that specifies the dead-letter queue.
+## 📚 Resources
 
-## Fetch, tail, and filter Lambda function logs
+- [AWS SAM Documentation](https://docs.aws.amazon.com/serverless-application-model/)
+- [DynamoDB Best Practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
+- [Lambda Performance Optimization](https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html)
+- [API Gateway Security](https://docs.aws.amazon.com/apigateway/latest/developerguide/security.html)
 
-To simplify troubleshooting, the AWS SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs that are generated by your Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
+## 🤝 Contributing
 
-**NOTE:** This command works for all Lambda functions, not just the ones you deploy using AWS SAM.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-```bash
-my-application$ sam logs -n putItemFunction --stack-name sam-app --tail
-```
+---
 
-**NOTE:** This uses the logical name of the function within the stack. This is the correct name to use when searching logs inside an AWS Lambda function within a CloudFormation stack, even if the deployed function name varies due to CloudFormation's unique resource name generation.
-
-You can find more information and examples about filtering Lambda function logs in the [AWS SAM CLI documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
-
-## Unit tests
-
-Tests are defined in the `__tests__` folder in this project. Use `npm` to install the [Jest test framework](https://jestjs.io/) and run unit tests.
-
-```bash
-my-application$ npm install
-my-application$ npm run test
-```
-
-## Cleanup
-
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
-
-```bash
-sam delete --stack-name  Tranzor
-```
-
-## Resources
-
-For an introduction to the AWS SAM specification, the AWS SAM CLI, and serverless application concepts, see the [AWS SAM Developer Guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html).
-
-Next, you can use the AWS Serverless Application Repository to deploy ready-to-use apps that go beyond Hello World samples and learn how authors developed their applications. For more information, see the [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/) and the [AWS Serverless Application Repository Developer Guide](https://docs.aws.amazon.com/serverlessrepo/latest/devguide/what-is-serverlessrepo.html).
+**Tranzor API** - Powering the future of financial transaction processing with serverless technology.
