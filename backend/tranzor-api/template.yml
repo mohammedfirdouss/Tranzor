@@ -132,6 +132,92 @@ Resources:
             Method: get
                
 
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+
+  RegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Register
+      Handler: register.handler
+      Runtime: nodejs18.x
+      CodeUri: src/auth/
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET: "REPLACE_WITH_SECRET"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        ApiRegister:
+          Type: Api
+          Properties:
+            Path: /auth/register
+            Method: post
+
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Login
+      Handler: login.handler
+      Runtime: nodejs18.x
+      CodeUri: src/auth/
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET: "REPLACE_WITH_SECRET"
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        ApiLogin:
+          Type: Api
+          Properties:
+            Path: /auth/login
+            Method: post
+
+  MeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Me
+      Handler: me.handler
+      Runtime: nodejs18.x
+      CodeUri: src/auth/
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET: "REPLACE_WITH_SECRET"
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        ApiMe:
+          Type: Api
+          Properties:
+            Path: /auth/me
+            Method: get
+
 Outputs:
   TransactionsTableName:
     Description: Name of the Transactions DynamoDB table
@@ -156,3 +242,15 @@ Outputs:
   ListAccountTransactionsFunctionArn:
     Description: ARN of the ListAccountTransactions Lambda function
     Value: !GetAtt ListAccountTransactionsFunction.Arn
+
+  RegisterFunctionArn:
+    Description: ARN of the Register Lambda function
+    Value: !GetAtt RegisterFunction.Arn
+
+  LoginFunctionArn:
+    Description: ARN of the Login Lambda function
+    Value: !GetAtt LoginFunction.Arn
+
+  MeFunctionArn:
+    Description: ARN of the Me Lambda function
+    Value: !GetAtt MeFunction.Arn
