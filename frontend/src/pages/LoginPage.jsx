@@ -1,49 +1,136 @@
 import React, { useState } from 'react';
-import { useLoginMutation } from '../store/api/authApi';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from '../store/authSlice';
-import { useNavigate } from 'react-router-dom';
-import { Button, Form, Input, Alert, Typography, Card } from 'antd';
+import { Card, Form, Input, Button, Typography, Space, Alert } from 'antd';
+import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export default function LoginPage() {
-  const [login, { isLoading }] = useLoginMutation();
-  const [error, setError] = useState(null);
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the page user was trying to access
+  const from = location.state?.from?.pathname || '/';
 
   const onFinish = async (values) => {
-    setError(null);
+    setLoading(true);
+    setError('');
+
     try {
-      const userData = await login(values).unwrap();
-      dispatch(setCredentials(userData));
-      navigate('/');
+      await signIn(values.username, values.password);
+      // Redirect to the page they were trying to access
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err.data?.message || 'Login failed');
+      setError(err.message || 'Sign in failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <Card style={{ width: 350 }}>
-        <Title level={3} style={{ textAlign: 'center' }}>Sign In</Title>
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Form layout="vertical" onFinish={onFinish}>
-          <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Please enter your email' }]}> 
-            <Input type="email" autoComplete="email" />
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px'
+    }}>
+      <Card
+        style={{
+          width: '100%',
+          maxWidth: '400px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          borderRadius: '12px'
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
+            <LoginOutlined style={{ marginRight: '8px' }} />
+            Tranzor Admin
+          </Title>
+          <Text type="secondary">
+            Sign in to access the transaction management system
+          </Text>
+        </div>
+
+        {error && (
+          <Alert
+            message="Authentication Error"
+            description={error}
+            type="error"
+            showIcon
+            style={{ marginBottom: '24px' }}
+          />
+        )}
+
+        <Form
+          name="login"
+          onFinish={onFinish}
+          autoComplete="off"
+          layout="vertical"
+          size="large"
+        >
+          <Form.Item
+            name="username"
+            label="Username"
+            rules={[
+              {
+                required: true,
+                message: 'Please enter your username!',
+              },
+            ]}
+          >
+            <Input
+              prefix={<UserOutlined />}
+              placeholder="Enter your username"
+              autoComplete="username"
+            />
           </Form.Item>
-          <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter your password' }]}> 
-            <Input.Password autoComplete="current-password" />
+
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[
+              {
+                required: true,
+                message: 'Please enter your password!',
+              },
+            ]}
+          >
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Enter your password"
+              autoComplete="current-password"
+            />
           </Form.Item>
+
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={isLoading}>
-              Log In
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              style={{
+                width: '100%',
+                height: '48px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600'
+              }}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
             </Button>
           </Form.Item>
         </Form>
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          Don't have an account? <a href="/register">Sign up</a>
+
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            Secure authentication powered by AWS Cognito
+          </Text>
         </div>
       </Card>
     </div>
