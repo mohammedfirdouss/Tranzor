@@ -1,247 +1,250 @@
-import React, { useState } from 'react';
-import { Input, Button, Space, DatePicker, message, Select } from 'antd';
-import * as RadixThemes from '@radix-ui/themes';
-import '@radix-ui/themes/styles.css';
-import { MagnifyingGlassIcon, PlusIcon, ReloadIcon, TableIcon } from '@radix-ui/react-icons';
-import { FiWifi } from 'react-icons/fi';
-import * as RadixTooltip from '@radix-ui/react-tooltip';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import DataTable from '../components/common/DataTable';
-import TransactionForm from '../components/forms/TransactionForm';
-import { useGetAccountTransactionsQuery, useCreateTransactionMutation } from '../store/api/transactionsApi';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Statistic, Select, DatePicker, Input, Button, Tag, Space, Alert } from 'antd';
+import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import { useTransactionsQuery } from '../store/api/transactionsApi';
+import { useRealtimeTransactions } from '../hooks/useRealtimeTransactions';
+import VirtualizedTable from '../components/common/VirtualizedTable';
 
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 export default function TransactionsPage() {
-  const [accountId, setAccountId] = useState('');
-  const [filters, setFilters] = useState({ 
-    status: '', 
-    type: '', 
-    startDate: '', 
-    endDate: '' 
+  const [filters, setFilters] = useState({
+    status: '',
+    search: '',
+    dateRange: null,
   });
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // RTK Query hooks
-  const { 
-    data: transactionsData, 
-    isLoading: transactionsLoading, 
-    error: transactionsError,
-    refetch: refetchTransactions
-  } = useGetAccountTransactionsQuery(
-    { 
-      accountId, 
-      limit: 50,
-      status: filters.status,
-      type: filters.type,
-      startDate: filters.startDate,
-      endDate: filters.endDate
-    },
-    { skip: !accountId }
-  );
+  // Fetch historical transactions
+  const { data: transactions = [], isLoading, error, refetch } = useTransactionsQuery();
 
-  const [createTransaction, { isLoading: createLoading }] = useCreateTransactionMutation();
+  // Real-time transaction feed
+  const { transactions: realtimeTransactions, isConnected, connectionStatus } = useRealtimeTransactions();
 
-  const transactions = transactionsData?.transactions || [];
-  const pagination = {
-    hasMore: transactionsData?.hasMore || false,
-    nextToken: transactionsData?.nextToken || null,
-  };
+  // Combine historical and real-time data
+  const allTransactions = [...realtimeTransactions, ...transactions];
 
-  const handleSearch = () => {
-    if (!accountId.trim()) {
-      message.warning('Please enter an Account ID to search transactions');
-      return;
+  // Filter transactions
+  const filteredTransactions = allTransactions.filter(transaction => {
+    if (filters.status && transaction.status !== filters.status) return false;
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      return (
+        transaction.id?.toLowerCase().includes(searchLower) ||
+        transaction.customerId?.toLowerCase().includes(searchLower) ||
+        transaction.amount?.toString().includes(searchLower)
+      );
     }
-    refetchTransactions();
-  };
+    if (filters.dateRange) {
+      const [start, end] = filters.dateRange;
+      const transactionDate = new Date(transaction.timestamp);
+      return transactionDate >= start && transactionDate <= end;
+    }
+    return true;
+  });
+
+  const columns = [
+    {
+      title: 'Transaction ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 200,
+      render: (id) => <code>{id}</code>,
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      key: 'amount',
+      width: 120,
+      render: (amount, record) => (
+        <span style={{ fontWeight: 'bold', color: amount > 1000 ? '#cf1322' : '#3f8600' }}>
+          ${amount?.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      render: (status) => {
+        const statusConfig = {
+          'SUCCESS': { color: 'green', text: 'Success' },
+          'FAILED': { color: 'red', text: 'Failed' },
+          'PENDING': { color: 'orange', text: 'Pending' },
+          'SUSPECTED_FRAUD': { color: 'volcano', text: 'Fraud' },
+        };
+        const config = statusConfig[status] || { color: 'default', text: status };
+        return <Tag color={config.color}>{config.text}</Tag>;
+      },
+    },
+    {
+      title: 'Customer ID',
+      dataIndex: 'customerId',
+      key: 'customerId',
+      width: 150,
+      render: (customerId) => <code>{customerId}</code>,
+    },
+    {
+      title: 'Risk Score',
+      dataIndex: 'riskScore',
+      key: 'riskScore',
+      width: 100,
+      render: (score) => {
+        if (!score) return '-';
+        const color = score > 80 ? 'red' : score > 50 ? 'orange' : 'green';
+        return <Tag color={color}>{score}</Tag>;
+      },
+    },
+    {
+      title: 'Timestamp',
+      dataIndex: 'timestamp',
+      key: 'timestamp',
+      width: 180,
+      render: (timestamp) => new Date(timestamp).toLocaleString(),
+    },
+  ];
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleDateRangeChange = (dates, dateStrings) => {
-    setFilters(prev => ({
-      ...prev,
-      startDate: dateStrings[0],
-      endDate: dateStrings[1]
-    }));
-  };
-
-  const handleCreateTransaction = async (transactionData) => {
-    try {
-      await createTransaction(transactionData).unwrap();
-      setShowCreateForm(false);
-      message.success('Transaction created successfully!');
-      refetchTransactions(); // Refresh the list
-    } catch (error) {
-      message.error('Failed to create transaction: ' + (error.data?.message || error.message));
-      throw error;
-    }
-  };
-
   const clearFilters = () => {
-    setFilters({ status: '', type: '', startDate: '', endDate: '' });
-  };
-
-  const nextPage = () => {
-    if (pagination.nextToken) {
-      // For now, we'll refetch with the next token
-      // In a more advanced implementation, we'd use RTK Query's pagination features
-      refetchTransactions();
-    }
+    setFilters({
+      status: '',
+      search: '',
+      dateRange: null,
+    });
   };
 
   return (
-    <RadixThemes.Theme appearance="light" accentColor="indigo" grayColor="mauve" radius="large">
-      <div>
-        {/* Header */}
-        <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <TableIcon width={24} height={24} color="#6366f1" />
-          <h2 style={{ margin: 0 }}>Transactions</h2>
-          <RadixTooltip.Root>
-            <RadixTooltip.Trigger asChild>
-              <span>
-                <RadixThemes.Badge color="green" variant="solid" size="2">Live</RadixThemes.Badge>
-              </span>
-            </RadixTooltip.Trigger>
-            <RadixTooltip.Content side="bottom">Real-time updates connected</RadixTooltip.Content>
-          </RadixTooltip.Root>
-          <RadixThemes.Button
-            color="indigo"
-            variant="solid"
-            size="3"
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            style={{ marginLeft: 'auto' }}
-          >
-            {showCreateForm ? <ReloadIcon /> : <PlusIcon />}
-            {showCreateForm ? 'Cancel' : 'Create Transaction'}
-          </RadixThemes.Button>
-        </div>
-
-        {/* Create Transaction Form */}
-        {showCreateForm && (
-          <RadixThemes.Card style={{ marginBottom: 24 }}>
-            <RadixThemes.Heading as="h3" size="4" mb="3">Create New Transaction</RadixThemes.Heading>
-            <TransactionForm
-              onSubmit={handleCreateTransaction}
-              loading={createLoading}
-              onCancel={() => setShowCreateForm(false)}
-            />
-          </RadixThemes.Card>
-        )}
-
-        {/* Search & Filter Card */}
-        <RadixThemes.Card>
-          <RadixThemes.Flex direction="column" gap="3">
-            <RadixThemes.Flex gap="3" align="center" wrap="wrap">
-              <Input
-                placeholder="Account ID (required)"
-                value={accountId}
-                onChange={e => setAccountId(e.target.value)}
-                aria-label="Account ID"
-                style={{ width: 200 }}
-              />
-              <Select
-                placeholder="Status"
-                value={filters.status}
-                onChange={value => handleFilterChange('status', value)}
-                style={{ width: 120 }}
-                allowClear
-              >
-                <Select.Option value="Pending">Pending</Select.Option>
-                <Select.Option value="Approved">Approved</Select.Option>
-                <Select.Option value="Declined">Declined</Select.Option>
-              </Select>
-              <Select
-                placeholder="Type"
-                value={filters.type}
-                onChange={value => handleFilterChange('type', value)}
-                style={{ width: 140 }}
-                allowClear
-              >
-                <Select.Option value="transfer">Transfer</Select.Option>
-                <Select.Option value="payment">Payment</Select.Option>
-                <Select.Option value="deposit">Deposit</Select.Option>
-                <Select.Option value="withdrawal">Withdrawal</Select.Option>
-                <Select.Option value="refund">Refund</Select.Option>
-              </Select>
-              {/* Keep AntD RangePicker for now, can be replaced with a Radix/other date picker later */}
-              <RangePicker
-                onChange={handleDateRangeChange}
-                style={{ width: 240 }}
-              />
-            </RadixThemes.Flex>
-            <RadixThemes.Flex gap="2">
-              <RadixThemes.Button
-                color="indigo"
-                variant="solid"
-                size="2"
-                onClick={handleSearch}
-                loading={transactionsLoading}
-                disabled={!accountId.trim()}
-              >
-                <MagnifyingGlassIcon /> Search
-              </RadixThemes.Button>
-              <RadixThemes.Button
-                color="gray"
-                variant="soft"
-                size="2"
-                onClick={refetchTransactions}
-                disabled={!accountId || transactionsLoading}
-              >
-                <ReloadIcon /> Refresh
-              </RadixThemes.Button>
-              <RadixThemes.Button
-                color="gray"
-                variant="ghost"
-                size="2"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </RadixThemes.Button>
-            </RadixThemes.Flex>
-          </RadixThemes.Flex>
-        </RadixThemes.Card>
-
-        {/* Error Message */}
-        {transactionsError && (
-          <RadixThemes.AlertDialog.Root open>
-            <RadixThemes.AlertDialog.Content>
-              <RadixThemes.AlertDialog.Title>Error</RadixThemes.AlertDialog.Title>
-              <RadixThemes.Text color="red">
-                {transactionsError.message || 'Failed to load transactions'}
-              </RadixThemes.Text>
-            </RadixThemes.AlertDialog.Content>
-          </RadixThemes.AlertDialog.Root>
-        )}
-
-        {/* Results Card */}
-        <RadixThemes.Card style={{ marginTop: 24 }}>
-          <RadixThemes.Flex align="center" gap="2">
-            <RadixThemes.Heading as="h4" size="3">Transaction Results</RadixThemes.Heading>
-            <RadixTooltip.Root>
-              <RadixTooltip.Trigger asChild>
-                <span><FiWifi color="#52c41a" size={16} /></span>
-              </RadixTooltip.Trigger>
-              <RadixTooltip.Content side="bottom">Real-time updates active</RadixTooltip.Content>
-            </RadixTooltip.Root>
-          </RadixThemes.Flex>
-          <LoadingSpinner spinning={transactionsLoading}>
-            <DataTable
-              data={transactions}
-              loading={transactionsLoading}
-              onNextPage={nextPage}
-              hasMore={pagination.hasMore}
-              emptyText={
-                !accountId
-                  ? 'Enter an Account ID above to search transactions'
-                  : 'No transactions found matching your criteria'
-              }
-            />
-          </LoadingSpinner>
-        </RadixThemes.Card>
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <h1>Transactions</h1>
+        <p>Monitor and manage transaction processing in real-time</p>
       </div>
-    </RadixThemes.Theme>
+
+      {/* Connection Status */}
+      {!isConnected && (
+        <Alert
+          message="WebSocket Disconnected"
+          description={`Connection status: ${connectionStatus}. Real-time updates may not be available.`}
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      {/* Statistics Cards */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Total Transactions"
+              value={allTransactions.length}
+              valueStyle={{ color: '#3f8600' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Success Rate"
+              value={allTransactions.filter(t => t.status === 'SUCCESS').length}
+              suffix={`/ ${allTransactions.length}`}
+              valueStyle={{ color: '#3f8600' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Failed Transactions"
+              value={allTransactions.filter(t => t.status === 'FAILED').length}
+              valueStyle={{ color: '#cf1322' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Fraud Alerts"
+              value={allTransactions.filter(t => t.status === 'SUSPECTED_FRAUD').length}
+              valueStyle={{ color: '#fa8c16' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Filters */}
+      <Card style={{ marginBottom: 16 }}>
+        <Space wrap style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Space wrap>
+            <Input
+              placeholder="Search transactions..."
+              prefix={<SearchOutlined />}
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              style={{ width: 250 }}
+            />
+            <Select
+              placeholder="Filter by status"
+              value={filters.status}
+              onChange={(value) => handleFilterChange('status', value)}
+              style={{ width: 150 }}
+              allowClear
+            >
+              <Option value="SUCCESS">Success</Option>
+              <Option value="FAILED">Failed</Option>
+              <Option value="PENDING">Pending</Option>
+              <Option value="SUSPECTED_FRAUD">Fraud</Option>
+            </Select>
+            <RangePicker
+              value={filters.dateRange}
+              onChange={(dates) => handleFilterChange('dateRange', dates)}
+              placeholder={['Start Date', 'End Date']}
+            />
+          </Space>
+          <Space>
+            <Button icon={<FilterOutlined />} onClick={clearFilters}>
+              Clear Filters
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={refetch} loading={isLoading}>
+              Refresh
+            </Button>
+          </Space>
+        </Space>
+      </Card>
+
+      {/* Transactions Table */}
+      <Card>
+        <VirtualizedTable
+          data={filteredTransactions}
+          columns={columns}
+          loading={isLoading}
+          rowKey="id"
+          containerHeight={600}
+          rowHeight={54}
+          pagination={false}
+          onRow={(record) => ({
+            onClick: () => {
+              // TODO: Open transaction details modal
+              console.log('Transaction clicked:', record);
+            },
+            style: { cursor: 'pointer' },
+          })}
+        />
+      </Card>
+
+      {error && (
+        <Alert
+          message="Error Loading Transactions"
+          description={error.message}
+          type="error"
+          showIcon
+          style={{ marginTop: 16 }}
+        />
+      )}
+    </div>
   );
 }

@@ -1,155 +1,253 @@
-# Tranzor Frontend
+# Tranzor Frontend - Real-Time Transaction Management System
 
-A React-based administrative dashboard for the Tranzor Real-Time Transaction Processing System.
+A modern, responsive React application for monitoring and managing financial transactions in real-time, built with AWS Cognito authentication, WebSocket connections, and optimized performance.
 
-## Features
+## 🚀 Features
 
-- **Real-time Transaction Monitoring**: Live updates of transaction status and metrics
-- **Advanced State Management**: RTK Query for efficient API caching and state synchronization
-- **Fraud Alert Management**: Real-time fraud detection and alert handling
-- **Comprehensive Audit Trail**: Search and filter audit logs with advanced capabilities
-- **System Metrics Dashboard**: Real-time performance monitoring and analytics
+### ✅ Authentication & Security
+- **AWS Cognito Integration**: Secure user authentication with JWT tokens
+- **Protected Routes**: Role-based access control with permission checking
+- **Automatic Token Refresh**: Seamless session management
+- **Secure API Communication**: All requests include authentication headers
 
-## Technology Stack
+### ✅ Real-Time Data
+- **WebSocket Connections**: Live transaction feeds with connection status indicators
+- **Real-Time Updates**: Instant updates for transactions, fraud alerts, and metrics
+- **Connection Management**: Automatic reconnection and error handling
+- **Performance Optimized**: Efficient data streaming without UI blocking
 
-- **React 19.1.0**: Latest React with hooks and modern patterns
-- **Redux Toolkit + RTK Query**: Advanced state management and API caching
-- **Ant Design 5.26.2**: Professional UI components and design system
-- **Vite**: Fast build tool and development server
-- **React Router**: Client-side routing
+### ✅ State Management
+- **RTK Query**: Advanced API state management with caching and synchronization
+- **Redux Toolkit**: Centralized state management for complex application state
+- **Optimistic Updates**: Immediate UI feedback for better user experience
+- **Automatic Background Refetching**: Keeps data fresh and synchronized
 
-## RTK Query Implementation
+### ✅ Performance & Scalability
+- **Virtualized Tables**: Efficient rendering of large datasets (10,000+ records)
+- **Lazy Loading**: On-demand component and data loading
+- **Memory Optimization**: Proper cleanup and resource management
+- **Responsive Design**: Works seamlessly across desktop and tablet devices
 
-The application uses RTK Query for efficient API state management with the following features:
+### ✅ User Experience
+- **Modern UI**: Clean, professional interface using Ant Design
+- **Accessibility**: WCAG 2.1 compliant with proper ARIA labels and keyboard navigation
+- **Loading States**: Clear feedback during data operations
+- **Error Handling**: User-friendly error messages and recovery options
 
-### API Structure
+### ✅ Testing
+- **Unit Tests**: Comprehensive component testing with React Testing Library
+- **Integration Tests**: API integration and user flow testing
+- **Test Coverage**: High coverage for critical business logic
+- **Mock Services**: Isolated testing with mocked external dependencies
 
-```
-src/store/
-├── index.js                 # Redux store configuration
-├── api/
-│   ├── baseApi.js          # Base API configuration
-│   ├── transactionsApi.js  # Transaction endpoints
-│   ├── fraudAlertsApi.js   # Fraud detection endpoints
-│   ├── auditTrailApi.js    # Audit log endpoints
-│   └── metricsApi.js       # System metrics endpoints
-```
+## 🛠 Tech Stack
 
-### Key Features
+- **Framework**: React 19 with Vite
+- **UI Library**: Ant Design 5
+- **State Management**: Redux Toolkit + RTK Query
+- **Authentication**: AWS Cognito
+- **Real-Time**: WebSocket API
+- **Virtualization**: @tanstack/react-virtual
+- **Testing**: Vitest + React Testing Library
+- **Routing**: React Router 6
+- **Styling**: CSS-in-JS with Ant Design
 
-- **Automatic Caching**: API responses are cached for 5 minutes (configurable)
-- **Real-time Updates**: Polling and cache invalidation for live data
-- **Optimistic Updates**: UI updates immediately, rolls back on error
-- **Error Handling**: Centralized error management and retry logic
-- **Type Safety**: Full TypeScript support (when implemented)
+## 📦 Installation
 
-### Usage Examples
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Tranzor/frontend
+   ```
 
-```javascript
-// Query hook for fetching transactions
-const { data, isLoading, error, refetch } = useGetAccountTransactionsQuery({
-  accountId: '123',
-  limit: 50,
-  status: 'Approved'
-});
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-// Mutation hook for creating transactions
-const [createTransaction, { isLoading }] = useCreateTransactionMutation();
+3. **Environment Configuration**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Update `.env.local` with your configuration:
+   ```env
+   # API Configuration
+   VITE_API_BASE_URL=http://localhost:3000/api
+   
+   # AWS Cognito Configuration
+   VITE_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
+   VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
+   VITE_AWS_REGION=us-east-1
+   
+   # WebSocket Configuration
+   VITE_WEBSOCKET_URL=wss://your-websocket-endpoint.com
+   ```
 
-const handleCreate = async (transactionData) => {
-  try {
-    await createTransaction(transactionData).unwrap();
-    // Cache is automatically updated
-  } catch (error) {
-    // Handle error
-  }
-};
-```
+4. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-## Environment Configuration
+## 🧪 Testing
 
-Create a `.env` file in the frontend directory:
-
-```env
-# API Configuration
-VITE_API_BASE_URL=http://localhost:3000
-
-# WebSocket Configuration (for future real-time features)
-VITE_WS_BASE_URL=ws://localhost:3001
-
-# Authentication Configuration
-VITE_AUTH_DOMAIN=your-auth-domain.auth0.com
-VITE_AUTH_CLIENT_ID=your-client-id
-VITE_AUTH_AUDIENCE=your-api-audience
-```
-
-## Development
-
-### Installation
-
+### Run Tests
 ```bash
-npm install
+# Run all tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests once
+npm run test:run
 ```
 
-### Development Server
+### Test Structure
+- `src/test/` - Test setup and utilities
+- `src/**/__tests__/` - Component-specific tests
+- `src/test/setup.js` - Global test configuration
 
-```bash
-npm run dev
+## 🏗 Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── common/         # Shared components (VirtualizedTable, etc.)
+│   └── forms/          # Form components
+├── config/             # Configuration files
+│   └── cognito.js      # AWS Cognito configuration
+├── contexts/           # React contexts
+│   └── AuthContext.jsx # Authentication context
+├── hooks/              # Custom React hooks
+│   ├── useApi.js       # API communication
+│   ├── useWebSocket.js # WebSocket management
+│   └── useRealtimeTransactions.js # Real-time data
+├── pages/              # Page components
+│   ├── DashboardPage.jsx
+│   ├── TransactionsPage.jsx
+│   ├── FraudAlertsPage.jsx
+│   ├── AuditTrailPage.jsx
+│   ├── SettingsPage.jsx
+│   └── LoginPage.jsx
+├── store/              # Redux store configuration
+│   ├── index.js        # Store setup
+│   └── api/            # RTK Query API slices
+├── test/               # Test files
+└── App.jsx             # Main application component
 ```
 
-### Build
+## 🔐 Authentication Flow
 
+1. **User visits protected route** → Redirected to login
+2. **Login with Cognito** → JWT tokens received
+3. **Tokens stored securely** → Automatic API authentication
+4. **Route protection** → Permission-based access control
+5. **Session management** → Automatic token refresh
+
+## 📡 Real-Time Features
+
+### WebSocket Integration
+- **Connection Management**: Automatic connection and reconnection
+- **Data Streaming**: Real-time transaction and alert updates
+- **Status Monitoring**: Connection health indicators
+- **Error Recovery**: Graceful handling of connection failures
+
+### Performance Optimizations
+- **Virtual Scrolling**: Efficient rendering of large datasets
+- **Debounced Updates**: Prevents excessive re-renders
+- **Memory Management**: Proper cleanup of event listeners
+- **Background Sync**: Keeps data fresh without blocking UI
+
+## 🎨 UI/UX Features
+
+### Accessibility
+- **WCAG 2.1 Compliance**: Proper ARIA labels and semantic HTML
+- **Keyboard Navigation**: Full keyboard accessibility
+- **Screen Reader Support**: Proper heading structure and descriptions
+- **Color Contrast**: Meets accessibility standards
+
+### Responsive Design
+- **Mobile-First**: Optimized for all screen sizes
+- **Flexible Layout**: Adapts to different viewport sizes
+- **Touch-Friendly**: Proper touch targets and interactions
+
+## 🚀 Deployment
+
+### Build for Production
 ```bash
 npm run build
 ```
 
-### Linting
+### Environment Variables for Production
+Ensure all required environment variables are set:
+- `VITE_API_BASE_URL` - Production API endpoint
+- `VITE_COGNITO_USER_POOL_ID` - AWS Cognito User Pool ID
+- `VITE_COGNITO_CLIENT_ID` - AWS Cognito Client ID
+- `VITE_AWS_REGION` - AWS Region
+- `VITE_WEBSOCKET_URL` - Production WebSocket endpoint
 
-```bash
-npm run lint
+### Deployment Considerations
+- **CDN Configuration**: Serve static assets from CDN
+- **CORS Settings**: Configure API Gateway CORS for production domain
+- **Security Headers**: Implement proper security headers
+- **Monitoring**: Set up error tracking and performance monitoring
+
+## 🔧 Development
+
+### Code Quality
+- **ESLint**: Code linting and formatting
+- **Prettier**: Consistent code formatting
+- **TypeScript**: Type safety (optional enhancement)
+
+### Performance Monitoring
+- **Bundle Analysis**: Monitor bundle size and optimization
+- **Performance Metrics**: Track Core Web Vitals
+- **Error Tracking**: Monitor and alert on errors
+
+## 📚 API Integration
+
+### Endpoints
+- `GET /api/transactions` - Fetch transaction history
+- `GET /api/fraud-alerts` - Fetch fraud alerts
+- `GET /api/audit-trail` - Fetch audit logs
+- `GET /api/metrics` - Fetch system metrics
+
+### Authentication
+All API requests include JWT tokens in the Authorization header:
+```
+Authorization: Bearer <access-token>
 ```
 
-## API Endpoints
+## 🤝 Contributing
 
-The frontend expects the following API endpoints:
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit changes**: `git commit -m 'Add amazing feature'`
+4. **Push to branch**: `git push origin feature/amazing-feature`
+5. **Open Pull Request**
 
-### Transactions
-- `GET /accounts/{accountId}/transactions` - Get account transactions
-- `GET /v1/transactions/{transactionId}` - Get transaction details
-- `POST /v1/transactions` - Create new transaction
-- `PATCH /v1/transactions/{transactionId}` - Update transaction
+### Development Guidelines
+- Follow existing code patterns and conventions
+- Write tests for new features
+- Ensure accessibility compliance
+- Update documentation as needed
 
-### Fraud Alerts
-- `GET /fraud/alerts/open` - Get open fraud alerts
-- `GET /fraud/alerts/{alertId}` - Get fraud alert details
-- `POST /fraud/alerts/{alertId}/decision` - Submit fraud decision
-- `GET /fraud/stats` - Get fraud statistics
+## 📄 License
 
-### Audit Trail
-- `GET /audit` - Search audit trail
-- `GET /audit/{logId}` - Get audit log details
-- `GET /audit/transaction/{transactionId}` - Get transaction audit log
-- `GET /audit/export` - Export audit logs
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-### Metrics
-- `GET /metrics/system` - Get system metrics
-- `GET /metrics/transactions` - Get transaction metrics
-- `GET /metrics/fraud` - Get fraud metrics
-- `GET /metrics/realtime` - Get real-time metrics
+## 🆘 Support
 
-## Performance Optimizations
+For support and questions:
+- Check the documentation
+- Review existing issues
+- Create a new issue with detailed information
+- Contact the development team
 
-- **Automatic Polling**: Real-time metrics update every 5 seconds
-- **Smart Caching**: Different cache durations for different data types
-- **Optimistic Updates**: Immediate UI feedback for mutations
-- **Background Refetching**: Data refreshes when window regains focus
+---
 
-## Future Enhancements
-
-- [x] WebSocket integration for real-time updates
-- [ ] Virtualization for large data tables
-- [ ] Advanced filtering and search capabilities
-- [ ] Export functionality for reports
-- [ ] User authentication and authorization
-- [ ] Dark mode support
-- [ ] Mobile responsiveness improvements
+**Built with ❤️ for modern financial technology**
