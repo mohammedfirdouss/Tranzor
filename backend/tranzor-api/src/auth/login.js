@@ -30,7 +30,11 @@ exports.handler = async (event) => {
           refreshToken: tokens.RefreshToken,
           expiresIn: tokens.ExpiresIn,
           tokenType: tokens.TokenType
-        })
+        }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        }
       };
     } catch (err) {
       return { statusCode: 401, body: JSON.stringify({ message: err.message }) };

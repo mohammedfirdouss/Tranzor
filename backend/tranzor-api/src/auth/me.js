@@ -45,6 +45,10 @@ exports.handler = async (event) => {
     // Return user info from token
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization"
+      },
       body: JSON.stringify({ user: { sub: payload.sub, email: payload.email } })
     };
   } catch (err) {

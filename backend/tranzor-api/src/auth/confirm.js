@@ -18,7 +18,14 @@ exports.handler = async (event) => {
     };
     try {
       await cognito.confirmSignUp(params).promise();
-      return { statusCode: 200, body: JSON.stringify({ message: 'Account confirmed. You may now log in.' }) };
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Account confirmed. You may now log in.' }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        }
+      };
     } catch (err) {
       return { statusCode: 400, body: JSON.stringify({ message: err.message }) };
     }

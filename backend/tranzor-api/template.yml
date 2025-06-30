@@ -89,7 +89,10 @@ Resources:
             Path: /v1/transactions
             Method: post
             RestApiId: !Ref ApiGateway
-
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,POST'"
 
   GetTransactionFunction:
     Type: AWS::Serverless::Function
@@ -111,7 +114,10 @@ Resources:
             Path: /v1/transactions/{transactionId}
             Method: get
             RestApiId: !Ref ApiGateway
-
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,GET'"
 
   ListAccountTransactionsFunction:
     Type: AWS::Serverless::Function
@@ -133,7 +139,10 @@ Resources:
             Path: /v1/accounts/{accountId}/transactions
             Method: get
             RestApiId: !Ref ApiGateway
-               
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,GET'"
 
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -182,6 +191,10 @@ Resources:
             Path: /auth/register
             Method: post
             RestApiId: !Ref ApiGateway
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,POST'"
 
   LoginFunction:
     Type: AWS::Serverless::Function
@@ -207,6 +220,10 @@ Resources:
             Path: /auth/login
             Method: post
             RestApiId: !Ref ApiGateway
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,POST'"
 
   MeFunction:
     Type: AWS::Serverless::Function
@@ -231,6 +248,10 @@ Resources:
             Path: /auth/me
             Method: get
             RestApiId: !Ref ApiGateway
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,GET'"
 
   ConfirmFunction:
     Type: AWS::Serverless::Function
@@ -256,6 +277,10 @@ Resources:
             Path: /auth/confirm
             Method: post
             RestApiId: !Ref ApiGateway
+            Cors:
+              AllowOrigin: "'*'"
+              AllowHeaders: "'Content-Type,Authorization'"
+              AllowMethods: "'OPTIONS,POST'"
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool

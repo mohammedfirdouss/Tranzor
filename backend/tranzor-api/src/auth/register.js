@@ -24,7 +24,11 @@ exports.handler = async (event) => {
       await cognito.signUp(params).promise();
       return {
         statusCode: 200,
-        body: JSON.stringify({ message: 'Registration successful. Please check your email for the confirmation code.' })
+        body: JSON.stringify({ message: 'Registration successful. Please check your email for the confirmation code.' }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        }
       };
     } catch (err) {
       if (err.code === 'UsernameExistsException') {
