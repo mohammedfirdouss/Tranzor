@@ -131,8 +131,19 @@ function UserMenu() {
       placement="bottomRight"
       trigger={['click']}
     >
-      <Space style={{ cursor: 'pointer', color: '#666' }}>
-        <Avatar icon={<UserOutlined />} />
+      <Space 
+        style={{ cursor: 'pointer', color: '#666' }}
+        role="button"
+        tabIndex={0}
+        aria-label={`User menu for ${user?.name || user?.username || 'User'}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.currentTarget.click();
+          }
+        }}
+      >
+        <Avatar icon={<UserOutlined />} alt={`Avatar for ${user?.name || user?.username || 'User'}`} />
         <span>{user?.name || user?.username || 'User'}</span>
       </Space>
     </Dropdown>
@@ -146,12 +157,16 @@ function AppLayout() {
   // Show loading while checking authentication
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
+      <div 
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh'
+        }}
+        role="status"
+        aria-live="polite"
+      >
         <div>Loading...</div>
       </div>
     );
@@ -164,7 +179,12 @@ function AppLayout() {
   
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider breakpoint="lg" collapsedWidth="0">
+      <Sider 
+        breakpoint="lg" 
+        collapsedWidth="0"
+        role="navigation"
+        aria-label="Main navigation"
+      >
         <div 
           style={{ 
             color: '#fff', 
@@ -195,6 +215,7 @@ function AppLayout() {
             alignItems: 'center',
             boxShadow: '0 1px 4px rgba(0,21,41,.08)'
           }}
+          role="banner"
         >
           <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
             Transaction Management System
@@ -209,6 +230,7 @@ function AppLayout() {
             borderRadius: 8,
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}
+          role="main"
         >
           <ErrorBoundary>
             <Routes>
