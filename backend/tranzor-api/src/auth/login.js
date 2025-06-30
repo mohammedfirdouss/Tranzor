@@ -9,7 +9,14 @@ exports.handler = async (event) => {
   try {
     const { email, password } = JSON.parse(event.body || '{}');
     if (!email || !password) {
-      return { statusCode: 400, body: JSON.stringify({ message: 'Email and password required' }) };
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: 'Email and password required' }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        }
+      };
     }
     const params = {
       AuthFlow: 'USER_PASSWORD_AUTH',
@@ -37,9 +44,23 @@ exports.handler = async (event) => {
         }
       };
     } catch (err) {
-      return { statusCode: 401, body: JSON.stringify({ message: err.message }) };
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ message: err.message }),
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        }
+      };
     }
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Internal server error' }),
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization"
+      }
+    };
   }
 };
