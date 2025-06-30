@@ -7,8 +7,9 @@ const CLIENT_ID = process.env.COGNITO_USER_POOL_CLIENT_ID;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
+  "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token",
+  "Access-Control-Allow-Methods": "OPTIONS,GET,POST,PUT,DELETE",
+  "Access-Control-Allow-Credentials": "true"
 };
 
 exports.handler = async (event) => {

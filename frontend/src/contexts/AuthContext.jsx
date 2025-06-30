@@ -119,7 +119,20 @@ export const AuthProvider = ({ children }) => {
           },
           onFailure: (err) => {
             console.error('Sign in error:', err);
-            message.error(err.message || 'Sign in failed');
+            let errorMessage = 'Sign in failed';
+            
+            // Provide more specific error messages
+            if (err.code === 'UserNotFoundException') {
+              errorMessage = 'User does not exist. Please register first.';
+            } else if (err.code === 'NotAuthorizedException') {
+              errorMessage = 'Incorrect email or password.';
+            } else if (err.code === 'UserNotConfirmedException') {
+              errorMessage = 'Please confirm your email address before signing in.';
+            } else if (err.message) {
+              errorMessage = err.message;
+            }
+            
+            message.error(errorMessage);
             reject(err);
           },
         });

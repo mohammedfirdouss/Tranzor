@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { message } from 'antd';
 
-const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || 'wss://localhost:3001';
+const WS_BASE_URL = import.meta.env.VITE_WEBSOCKET_URL || 'wss://localhost:3001';
 
 export const useWebSocket = (endpoint, options = {}) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -14,6 +14,13 @@ export const useWebSocket = (endpoint, options = {}) => {
   const reconnectInterval = options.reconnectInterval || 3000;
 
   const connect = useCallback(() => {
+    // Disable WebSocket connections if not properly configured
+    if (!import.meta.env.VITE_WEBSOCKET_URL || import.meta.env.VITE_WEBSOCKET_URL === 'wss://localhost:3001') {
+      console.log('WebSocket disabled - not configured for production');
+      setError('WebSocket not available');
+      return;
+    }
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }

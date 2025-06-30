@@ -36,6 +36,8 @@ export const useApi = () => {
           ...headers,
           ...options.headers,
         },
+        mode: 'cors', // Explicitly enable CORS
+        credentials: 'omit', // Don't send cookies for cross-origin requests
       });
 
       if (!response.ok) {
@@ -53,6 +55,7 @@ export const useApi = () => {
       const data = await response.json();
       return data;
     } catch (err) {
+      console.error('API request failed:', err);
       setError(err.message);
       throw err;
     } finally {

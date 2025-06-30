@@ -75,16 +75,21 @@ A modern, responsive React application for monitoring and managing financial tra
    # API Configuration
    VITE_API_BASE_URL=http://localhost:3000/api
    
-   # AWS Cognito Configuration
+   # AWS Cognito Configuration - Get these from your AWS Console
    VITE_COGNITO_USER_POOL_ID=us-east-1_xxxxxxxxx
    VITE_COGNITO_CLIENT_ID=xxxxxxxxxxxxxxxxxxxxxxxxxx
    VITE_AWS_REGION=us-east-1
    
-   # WebSocket Configuration
-   VITE_WEBSOCKET_URL=wss://your-websocket-endpoint.com
+   # WebSocket Configuration - Disabled for now (not implemented in backend)
+   VITE_WEBSOCKET_URL=wss://localhost:3001
    ```
 
-4. **Start development server**
+4. **Get Cognito Configuration**
+   - Deploy the backend first: `cd ../backend/tranzor-api && sam deploy --guided`
+   - Copy the Cognito User Pool ID and Client ID from the deployment outputs
+   - Update your `.env.local` with the actual values
+
+5. **Start development server**
    ```bash
    npm run dev
    ```
@@ -251,3 +256,24 @@ For support and questions:
 ---
 
 **Built with ❤️ for modern financial technology**
+
+## 🔧 Troubleshooting
+
+### Authentication Issues
+- **"User does not exist"**: Register a new user first using the registration page
+- **"Incorrect email or password"**: Check your credentials or reset password
+- **"Please confirm your email"**: Check your email for confirmation code
+
+### CORS Issues
+- The backend has CORS configured for the deployed API Gateway
+- If you see CORS errors, ensure you're using the correct API URL
+
+### WebSocket Issues
+- WebSocket connections are currently disabled as the backend doesn't implement WebSocket support yet
+- Real-time features will be added in a future update
+- This is normal and won't affect core functionality
+
+### API Connection Issues
+- Ensure the backend is deployed and accessible
+- Check that your environment variables are correctly set
+- Verify the API Gateway URL in your `.env.local` file
