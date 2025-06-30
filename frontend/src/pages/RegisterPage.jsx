@@ -10,15 +10,16 @@ const { Title } = Typography;
 export default function RegisterPage() {
   const [register, { isLoading }] = useRegisterMutation();
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
     setError(null);
+    setSuccess(null);
     try {
-      const userData = await register(values).unwrap();
-      dispatch(setCredentials(userData));
-      navigate('/');
+      await register(values).unwrap();
+      setSuccess('Registration successful! Please check your email for a verification code.');
     } catch (err) {
       setError(err.data?.message || 'Registration failed');
     }
@@ -28,6 +29,15 @@ export default function RegisterPage() {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <Card style={{ width: 350 }}>
         <Title level={3} style={{ textAlign: 'center' }}>Sign Up</Title>
+        {success && (
+          <Alert
+            type="success"
+            message={success}
+            showIcon
+            style={{ marginBottom: 16 }}
+            action={<Button type="link" href="/confirm">Enter Verification Code</Button>}
+          />
+        )}
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
         <Form layout="vertical" onFinish={onFinish}>
           <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Please enter your email' }]}> 
