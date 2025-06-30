@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Select, DatePicker, Input, Button, Tag, Space, Alert } from 'antd';
 import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
-import { useTransactionsQuery } from '../store/api/transactionsApi';
+import { useGetLatestTransactionsQuery } from '../store/api/transactionsApi';
 import { useRealtimeTransactions } from '../hooks/useRealtimeTransactions';
 import VirtualizedTable from '../components/common/VirtualizedTable';
 
@@ -16,7 +16,9 @@ export default function TransactionsPage() {
   });
 
   // Fetch historical transactions
-  const { data: transactions = [], isLoading, error, refetch } = useTransactionsQuery();
+  const accountId = 'demo-account'; // TODO: Replace with real accountId from user context or selection
+  const { data: latestData = { transactions: [] }, isLoading, error, refetch } = useGetLatestTransactionsQuery({ accountId });
+  const transactions = latestData.transactions;
 
   // Real-time transaction feed
   const { transactions: realtimeTransactions, isConnected, connectionStatus } = useRealtimeTransactions();
