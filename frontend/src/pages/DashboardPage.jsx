@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
-import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip, Typography, Divider } from 'antd';
-import { DashboardOutlined, ReloadOutlined, WifiOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip, Typography, Divider, message, Form, Select, InputNumber } from 'antd';
+import { DashboardOutlined, ReloadOutlined, WifiOutlined, InfoCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
-import { useGetLatestTransactionsQuery, useGetTransactionQuery, useGetRealtimeMetricsQuery } from '../store/api/transactionsApi';
+import { 
+  useGetLatestTransactionsQuery, 
+  useGetTransactionQuery, 
+  useGetRealtimeMetricsQuery,
+  useCreateTransactionMutation
+} from '../store/api/mockApi';
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 export default function DashboardPage() {
-  const [accountId, setAccountId] = useState('');
+  const [accountId, setAccountId] = useState('ACC000001'); // Default account for demo
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [createForm] = Form.useForm();
   
-  // RTK Query hooks
+  // Mock API hooks
   const { 
     data: transactionsData, 
     isLoading: transactionsLoading, 
@@ -39,6 +47,8 @@ export default function DashboardPage() {
     { transactionId: selectedTransaction?.transactionId, accountId },
     { skip: !selectedTransaction?.transactionId }
   );
+
+  const [createTransaction, { isLoading: creatingTransaction }] = useCreateTransactionMutation();
 
   const transactions = transactionsData?.transactions || [];
   const metrics = metricsData || {};
@@ -68,6 +78,26 @@ export default function DashboardPage() {
     }
   };
 
+  const handleCreateTransaction = async (values) => {
+    try {
+      await createTransaction({
+        accountId: accountId,
+        amount: values.amount,
+        currency: values.currency,
+        type: values.type,
+        merchant: values.merchant,
+        description: values.description
+      }).unwrap();
+      
+      message.success('Transaction created successfully!');
+      setCreateModalVisible(false);
+      createForm.resetFields();
+      refetchTransactions();
+    } catch (error) {
+      message.error('Failed to create transaction');
+    }
+  };
+
   const error = transactionsError || metricsError;
 
   return (
@@ -87,7 +117,7 @@ export default function DashboardPage() {
       <div style={{ marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <Input
           placeholder="Enter Account ID to load dashboard data"
-        value={accountId}
+          value={accountId}
           onChange={(e) => setAccountId(e.target.value)}
           onKeyPress={handleKeyPress}
           style={{ width: 300, maxWidth: '100%' }}
@@ -111,6 +141,14 @@ export default function DashboardPage() {
           aria-label="Refresh Dashboard"
         >
           Refresh
+        </Button>
+        <Button 
+          type="dashed"
+          icon={<PlusOutlined />}
+          onClick={() => setCreateModalVisible(true)}
+          disabled={!accountId}
+        >
+          Create Transaction
         </Button>
       </div>
       {error && (
@@ -180,137 +218,192 @@ export default function DashboardPage() {
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
-          <Card>
+              <Card>
                 <Statistic 
                   title="Avg Latency" 
                   value={metrics.averageLatency || 0}
                   valueStyle={{ color: '#13c2c2' }}
                   suffix="ms"
                 />
-          </Card>
-        </Col>
+              </Card>
+            </Col>
             <Col xs={24} sm={12} lg={6}>
-          <Card>
+              <Card>
                 <Statistic 
                   title="Success Rate" 
                   value={metrics.successRate || 0}
                   valueStyle={{ color: '#52c41a' }}
                   suffix="%"
                 />
-          </Card>
-        </Col>
+              </Card>
+            </Col>
             <Col xs={24} sm={12} lg={6}>
-          <Card>
+              <Card>
                 <Statistic 
-                  title="Active Alerts" 
-                  value={metrics.activeAlerts || 0}
-                  valueStyle={{ color: '#ff4d4f' }}
+                  title="Uptime" 
+                  value={metrics.uptime || 0}
+                  valueStyle={{ color: '#1890ff' }}
+                  suffix="%"
                 />
-          </Card>
-        </Col>
-      </Row>
+              </Card>
+            </Col>
+          </Row>
         )}
 
-        <Card 
-          title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              Recent Transactions
-              <Tooltip title="Real-time updates active">
-                <WifiOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
-              </Tooltip>
-            </div>
-          } 
-          style={{ marginTop: 24 }}
-        >
+        {/* Transactions Table */}
+        <Card title="Latest Transactions" style={{ marginBottom: 24 }}>
           <DataTable
             data={transactions}
+            columns={[
+              { title: 'Transaction ID', dataIndex: 'transactionId', key: 'transactionId' },
+              { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount, record) => `${record.currency} ${amount}` },
+              { title: 'Type', dataIndex: 'type', key: 'type' },
+              { title: 'Status', dataIndex: 'status', key: 'status' },
+              { title: 'Merchant', dataIndex: 'merchant', key: 'merchant' },
+              { title: 'Date', dataIndex: 'timestamp', key: 'timestamp', render: (timestamp) => new Date(timestamp).toLocaleDateString() },
+              {
+                title: 'Actions',
+                key: 'actions',
+                render: (_, record) => (
+                  <Button type="link" onClick={() => handleViewDetails(record)}>
+                    View Details
+                  </Button>
+                ),
+              },
+            ]}
             loading={transactionsLoading}
-            onViewDetails={handleViewDetails}
-            emptyText={
-              !accountId 
-                ? <Text type="secondary">Enter an Account ID above to view transactions</Text>
-                : <Text type="secondary">No transactions found for this account</Text>
-            }
+            pagination={false}
           />
         </Card>
       </LoadingSpinner>
 
+      {/* Transaction Details Modal */}
       <Modal
-        title={`Transaction Details`}
+        title="Transaction Details"
         open={detailsVisible}
         onCancel={() => setDetailsVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailsVisible(false)}>
-            Close
-          </Button>
-        ]}
-        width={800}
-        aria-label="Transaction Details Modal"
+        footer={null}
+        width={600}
       >
-        {detailsLoading ? (
-          <LoadingSpinner spinning={true} />
-        ) : transactionDetails ? (
-          <div>
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <strong>Transaction ID:</strong><br />
-                {transactionDetails.transactionId}
-              </Col>
-              <Col span={12}>
-                <strong>Status:</strong><br />
-                {transactionDetails.status}
-              </Col>
-              <Col span={12}>
-                <strong>Amount:</strong><br />
-                {transactionDetails.amount?.value} {transactionDetails.amount?.currency}
-              </Col>
-              <Col span={12}>
-                <strong>Type:</strong><br />
-                {transactionDetails.transactionType}
-              </Col>
-              <Col span={12}>
-                <strong>Sender:</strong><br />
-                {transactionDetails.senderAccountId}
-              </Col>
-              <Col span={12}>
-                <strong>Receiver:</strong><br />
-                {transactionDetails.receiverAccountId}
-              </Col>
-              <Col span={24}>
-                <strong>Timestamp:</strong><br />
-                {new Date(transactionDetails.receivedTimestamp).toLocaleString()}
-              </Col>
-              {transactionDetails.metadata && (
-                <Col span={24}>
-                  <strong>Metadata:</strong>
-                  <pre style={{ 
-                    background: '#f5f5f5', 
-                    padding: 12, 
-                    borderRadius: 4,
-                    marginTop: 8,
-                    fontSize: '12px',
-                    overflow: 'auto'
-                  }}>
-                    {(() => {
-                      let meta = transactionDetails.metadata;
-                      if (typeof meta === 'string') {
-                        try {
-                          meta = JSON.parse(meta);
-                        } catch {
-                          // If not JSON, display as-is
-                          return meta;
-                        }
-                      }
-                      return JSON.stringify(meta, null, 2);
-                    })()}
-                  </pre>
+        <LoadingSpinner spinning={detailsLoading}>
+          {transactionDetails && (
+            <div>
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Text strong>Transaction ID:</Text>
+                  <br />
+                  <Text>{transactionDetails.transactionId}</Text>
                 </Col>
-              )}
-            </Row>
-          </div>
-        ) : (
-          <div>No transaction details available</div>
-        )}
+                <Col span={12}>
+                  <Text strong>Amount:</Text>
+                  <br />
+                  <Text>{transactionDetails.currency} {transactionDetails.amount}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Type:</Text>
+                  <br />
+                  <Text>{transactionDetails.type}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Status:</Text>
+                  <br />
+                  <Text>{transactionDetails.status}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Merchant:</Text>
+                  <br />
+                  <Text>{transactionDetails.merchant}</Text>
+                </Col>
+                <Col span={12}>
+                  <Text strong>Fraud Score:</Text>
+                  <br />
+                  <Text>{transactionDetails.fraudScore?.toFixed(2)}%</Text>
+                </Col>
+                <Col span={24}>
+                  <Text strong>Description:</Text>
+                  <br />
+                  <Text>{transactionDetails.description}</Text>
+                </Col>
+              </Row>
+            </div>
+          )}
+        </LoadingSpinner>
+      </Modal>
+
+      {/* Create Transaction Modal */}
+      <Modal
+        title="Create New Transaction"
+        open={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        footer={null}
+        width={500}
+      >
+        <Form
+          form={createForm}
+          layout="vertical"
+          onFinish={handleCreateTransaction}
+        >
+          <Form.Item
+            name="amount"
+            label="Amount"
+            rules={[{ required: true, message: 'Please enter amount' }]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              min={0.01}
+              step={0.01}
+              placeholder="Enter amount"
+            />
+          </Form.Item>
+          
+          <Form.Item
+            name="currency"
+            label="Currency"
+            rules={[{ required: true, message: 'Please select currency' }]}
+          >
+            <Select placeholder="Select currency">
+              <Option value="USD">USD</Option>
+              <Option value="EUR">EUR</Option>
+              <Option value="GBP">GBP</Option>
+              <Option value="CAD">CAD</Option>
+            </Select>
+          </Form.Item>
+          
+          <Form.Item
+            name="type"
+            label="Transaction Type"
+            rules={[{ required: true, message: 'Please select type' }]}
+          >
+            <Select placeholder="Select type">
+              <Option value="PAYMENT">Payment</Option>
+              <Option value="TRANSFER">Transfer</Option>
+              <Option value="WITHDRAWAL">Withdrawal</Option>
+              <Option value="DEPOSIT">Deposit</Option>
+            </Select>
+          </Form.Item>
+          
+          <Form.Item
+            name="merchant"
+            label="Merchant"
+            rules={[{ required: true, message: 'Please enter merchant' }]}
+          >
+            <Input placeholder="Enter merchant name" />
+          </Form.Item>
+          
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: 'Please enter description' }]}
+          >
+            <Input.TextArea placeholder="Enter transaction description" />
+          </Form.Item>
+          
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={creatingTransaction} block>
+              Create Transaction
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

@@ -1,224 +1,318 @@
-import React, { useState } from 'react';
-import { Card, Input, Button, Space, DatePicker, Select, Typography, Divider } from 'antd';
-import { FileSearchOutlined, SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { 
+  Card, 
+  Table, 
+  Button, 
+  Input, 
+  Select, 
+  Space, 
+  Tag, 
+  Typography, 
+  Row, 
+  Col,
+  Tooltip,
+  Badge,
+  Statistic,
+  DatePicker
+} from 'antd';
+import { 
+  SearchOutlined, 
+  ReloadOutlined,
+  FileSearchOutlined,
+  UserOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
+} from '@ant-design/icons';
+import { useGetAuditLogsQuery } from '../store/api/mockApi';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import DataTable from '../components/common/DataTable';
-import useTransactions from '../hooks/useTransactions';
 
-const { RangePicker } = DatePicker;
-const { Option } = Select;
 const { Title, Text } = Typography;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 export default function AuditTrailPage() {
-  const [accountId, setAccountId] = useState('');
-  const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
-    status: '',
-    type: ''
+  const [searchText, setSearchText] = useState('');
+  const [eventTypeFilter, setEventTypeFilter] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [dateRange, setDateRange] = useState(null);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 20,
+    total: 0,
   });
 
+  // Mock API hooks
   const { 
-    transactions, 
-    loading, 
+    data: logsData, 
+    isLoading, 
     error, 
-    pagination,
-    nextPage,
-    refresh 
-  } = useTransactions(accountId, filters);
+    refetch 
+  } = useGetAuditLogsQuery({ limit: 100 });
 
-  const handleSearch = () => {
-    if (!accountId.trim()) {
-      return;
-    }
-    refresh();
-  };
+  const logs = logsData?.logs || [];
 
-  const handleDateRangeChange = (dates, dateStrings) => {
-    setFilters(prev => ({
+  // Filter logs
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = !searchText || 
+      log.logId.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.eventType.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.userId.toLowerCase().includes(searchText.toLowerCase()) ||
+      log.ipAddress.toLowerCase().includes(searchText.toLowerCase());
+    
+    const matchesEventType = !eventTypeFilter || log.eventType === eventTypeFilter;
+    const matchesUser = !userFilter || log.userId === userFilter;
+    
+    const matchesDate = !dateRange || !dateRange[0] || !dateRange[1] || 
+      (new Date(log.timestamp) >= dateRange[0].startOf('day') &&
+       new Date(log.timestamp) <= dateRange[1].endOf('day'));
+    
+    return matchesSearch && matchesEventType && matchesUser && matchesDate;
+  });
+
+  // Update pagination when data changes
+  useEffect(() => {
+    setPagination(prev => ({
       ...prev,
-      startDate: dateStrings[0],
-      endDate: dateStrings[1]
+      total: filteredLogs.length,
     }));
+  }, [filteredLogs.length]);
+
+  const getEventTypeColor = (eventType) => {
+    switch (eventType) {
+      case 'USER_LOGIN': return 'green';
+      case 'USER_LOGOUT': return 'blue';
+      case 'TRANSACTION_CREATED': return 'purple';
+      case 'TRANSACTION_UPDATED': return 'orange';
+      case 'FRAUD_ALERT_CREATED': return 'red';
+      case 'SETTINGS_CHANGED': return 'cyan';
+      default: return 'default';
+    }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const getEventIcon = (eventType) => {
+    switch (eventType) {
+      case 'USER_LOGIN': return <UserOutlined />;
+      case 'USER_LOGOUT': return <UserOutlined />;
+      case 'TRANSACTION_CREATED': return <ClockCircleOutlined />;
+      case 'TRANSACTION_UPDATED': return <ClockCircleOutlined />;
+      case 'FRAUD_ALERT_CREATED': return <CloseCircleOutlined />;
+      case 'SETTINGS_CHANGED': return <CheckCircleOutlined />;
+      default: return <ClockCircleOutlined />;
+    }
   };
 
-  const clearFilters = () => {
-    setFilters({ startDate: '', endDate: '', status: '', type: '' });
-  };
-
-  const auditColumns = [
+  const columns = [
     {
-      title: 'Transaction ID',
-      dataIndex: 'transactionId',
-      key: 'transactionId',
-      width: 200,
-      ellipsis: true,
-    },
-    {
-      title: 'Type',
-      dataIndex: 'transactionType',
-      key: 'transactionType',
+      title: 'Log ID',
+      dataIndex: 'logId',
+      key: 'logId',
       width: 120,
+      render: (text) => <Text code>{text}</Text>,
     },
     {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
+      title: 'Event Type',
+      dataIndex: 'eventType',
+      key: 'eventType',
       width: 150,
-      render: (amount) => {
-        if (!amount || typeof amount !== 'object') return '-';
-        return `${amount.value} ${amount.currency}`;
-      },
+      render: (eventType) => (
+        <Tag color={getEventTypeColor(eventType)} icon={getEventIcon(eventType)}>
+          {eventType.replace(/_/g, ' ')}
+        </Tag>
+      ),
+    },
+    {
+      title: 'User',
+      dataIndex: 'userId',
+      key: 'userId',
+      width: 180,
+      render: (userId) => (
+        <Space>
+          <UserOutlined />
+          <Text>{userId}</Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'IP Address',
+      dataIndex: 'ipAddress',
+      key: 'ipAddress',
+      width: 120,
+      render: (ip) => <Text code>{ip}</Text>,
+    },
+    {
+      title: 'Timestamp',
+      dataIndex: 'timestamp',
+      key: 'timestamp',
+      width: 160,
+      render: (timestamp) => new Date(timestamp).toLocaleString(),
     },
     {
       title: 'Status',
-      dataIndex: 'status',
       key: 'status',
       width: 100,
+      render: (_, record) => (
+        <Badge 
+          status={record.success ? 'success' : 'error'} 
+          text={record.success ? 'Success' : 'Failed'}
+        />
+      ),
     },
     {
-      title: 'Received',
-      dataIndex: 'receivedTimestamp',
-      key: 'receivedTimestamp',
-      width: 160,
-      render: (timestamp) => {
-        if (!timestamp) return '-';
-        return new Date(timestamp).toLocaleString();
+      title: 'Details',
+      key: 'details',
+      width: 200,
+      render: (_, record) => {
+        if (record.details?.resource) {
+          return (
+            <Tooltip title={record.details.action}>
+              <Text code>{record.details.resource}</Text>
+            </Tooltip>
+          );
+        }
+        return <Text type="secondary">-</Text>;
       },
-    },
-    {
-      title: 'Processed',
-      dataIndex: 'processedTimestamp',
-      key: 'processedTimestamp',
-      width: 160,
-      render: (timestamp) => {
-        if (!timestamp) return 'Not processed';
-        return new Date(timestamp).toLocaleString();
-      },
-    },
-    {
-      title: 'Sender',
-      dataIndex: 'senderAccountId',
-      key: 'senderAccountId',
-      width: 150,
-      ellipsis: true,
-    },
-    {
-      title: 'Receiver',
-      dataIndex: 'receiverAccountId',
-      key: 'receiverAccountId',
-      width: 150,
-      ellipsis: true,
     },
   ];
 
+  const stats = {
+    total: filteredLogs.length,
+    successful: filteredLogs.filter(log => log.success).length,
+    failed: filteredLogs.filter(log => !log.success).length,
+    logins: filteredLogs.filter(log => log.eventType === 'USER_LOGIN').length,
+    transactions: filteredLogs.filter(log => log.eventType.includes('TRANSACTION')).length,
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-        <FileSearchOutlined style={{ fontSize: 24, color: '#1890ff' }} aria-label="Audit Trail Icon" />
-        <Title level={2} style={{ margin: 0, fontSize: 24 }}>Audit Trail</Title>
+      <div style={{ marginBottom: 24 }}>
+        <Title level={2}>
+          <FileSearchOutlined style={{ marginRight: 8 }} />
+          Audit Trail
+        </Title>
+        <Text type="secondary">
+          Comprehensive audit log of all system activities
+        </Text>
       </div>
-      <Divider />
-      <Card title={<span><FilterOutlined style={{ color: '#1890ff', marginRight: 8 }} />Search Audit Trail</span>}>
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+
+      {/* Statistics Cards */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic 
+              title="Total Logs" 
+              value={stats.total}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic 
+              title="Successful" 
+              value={stats.successful}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic 
+              title="Failed" 
+              value={stats.failed}
+              valueStyle={{ color: '#ff4d4f' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic 
+              title="User Logins" 
+              value={stats.logins}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Filters and Search */}
+      <Card style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={8} md={6}>
             <Input
-              placeholder="Account ID (required)"
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              style={{ width: 200, maxWidth: '100%' }}
-              aria-label="Account ID"
+              placeholder="Search logs..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               allowClear
             />
+          </Col>
+          <Col xs={24} sm={8} md={4}>
+            <Select
+              placeholder="Event Type"
+              value={eventTypeFilter}
+              onChange={setEventTypeFilter}
+              allowClear
+              style={{ width: '100%' }}
+            >
+              <Option value="USER_LOGIN">User Login</Option>
+              <Option value="USER_LOGOUT">User Logout</Option>
+              <Option value="TRANSACTION_CREATED">Transaction Created</Option>
+              <Option value="TRANSACTION_UPDATED">Transaction Updated</Option>
+              <Option value="FRAUD_ALERT_CREATED">Fraud Alert Created</Option>
+              <Option value="SETTINGS_CHANGED">Settings Changed</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={8} md={4}>
+            <Select
+              placeholder="User"
+              value={userFilter}
+              onChange={setUserFilter}
+              allowClear
+              style={{ width: '100%' }}
+            >
+              <Option value="admin@tranzor.com">admin@tranzor.com</Option>
+              <Option value="analyst@tranzor.com">analyst@tranzor.com</Option>
+              <Option value="manager@tranzor.com">manager@tranzor.com</Option>
+              <Option value="support@tranzor.com">support@tranzor.com</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={8} md={6}>
             <RangePicker
-              onChange={handleDateRangeChange}
-              style={{ width: 240, maxWidth: '100%' }}
+              value={dateRange}
+              onChange={setDateRange}
+              style={{ width: '100%' }}
               placeholder={['Start Date', 'End Date']}
-              aria-label="Date Range"
-              allowClear
             />
-            <Select
-              placeholder="Status"
-              value={filters.status}
-              onChange={(value) => handleFilterChange('status', value)}
-              style={{ width: 120, maxWidth: '100%' }}
-              allowClear
-              aria-label="Status Filter"
-            >
-              <Option value="Pending">Pending</Option>
-              <Option value="Approved">Approved</Option>
-              <Option value="Declined">Declined</Option>
-            </Select>
-            <Select
-              placeholder="Type"
-              value={filters.type}
-              onChange={(value) => handleFilterChange('type', value)}
-              style={{ width: 140, maxWidth: '100%' }}
-              allowClear
-              aria-label="Type Filter"
-            >
-              <Option value="transfer">Transfer</Option>
-              <Option value="payment">Payment</Option>
-              <Option value="deposit">Deposit</Option>
-              <Option value="withdrawal">Withdrawal</Option>
-              <Option value="refund">Refund</Option>
-            </Select>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Button 
-              type="primary" 
-              icon={<SearchOutlined />} 
-              onClick={handleSearch}
-              loading={loading}
-              disabled={!accountId.trim()}
-              aria-label="Search Audit Trail"
-            >
-              Search
-            </Button>
+          </Col>
+          <Col xs={24} sm={8} md={4}>
             <Button 
               icon={<ReloadOutlined />} 
-              onClick={refresh}
-              disabled={!accountId || loading}
-              aria-label="Refresh Results"
+              onClick={refetch}
+              loading={isLoading}
             >
               Refresh
             </Button>
-            <Button onClick={clearFilters} aria-label="Clear Filters">
-              Clear Filters
-            </Button>
-          </div>
-        </Space>
+          </Col>
+        </Row>
       </Card>
-      {error && (
-        <div style={{ 
-          margin: '16px 0', 
-          padding: 16, 
-          background: '#fff2f0', 
-          border: '1px solid #ffccc7',
-          borderRadius: 6,
-          color: '#a8071a',
-          fontWeight: 500
-        }} role="alert">
-          Error: {error}
-        </div>
-      )}
-      <Card title={<span>Audit Results</span>} style={{ marginTop: 24 }}>
-        <LoadingSpinner spinning={loading}>
-          <DataTable
-            data={transactions}
-            columns={auditColumns}
-            loading={loading}
-            onNextPage={nextPage}
-            hasMore={pagination.hasMore}
-            emptyText={
-              !accountId 
-                ? <Text type="secondary">Enter an Account ID above to view audit trail</Text>
-                : <Text type="secondary">No audit records found matching your criteria</Text>
-            }
+
+      {/* Audit Logs Table */}
+      <Card>
+        <LoadingSpinner spinning={isLoading}>
+          <Table
+            columns={columns}
+            dataSource={filteredLogs}
+            rowKey="logId"
+            pagination={{
+              ...pagination,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => 
+                `${range[0]}-${range[1]} of ${total} logs`,
+            }}
+            onChange={(pagination) => setPagination(pagination)}
+            scroll={{ x: 1200 }}
           />
         </LoadingSpinner>
       </Card>

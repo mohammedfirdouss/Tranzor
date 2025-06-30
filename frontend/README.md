@@ -277,3 +277,214 @@ For support and questions:
 - Ensure the backend is deployed and accessible
 - Check that your environment variables are correctly set
 - Verify the API Gateway URL in your `.env.local` file
+
+## 🎯 Mock Data System
+The application includes a comprehensive mock data system that provides:
+
+- **Realistic Transaction Data**: 100+ sample transactions with various types, statuses, and amounts
+- **Fraud Alerts**: 20+ fraud alerts with different severity levels and investigation states
+- **Audit Logs**: 100+ audit log entries covering all system activities
+- **Real-time Metrics**: Live-updating system metrics and performance data
+- **Interactive CRUD Operations**: Create, read, update, and delete functionality for all data types
+
+### 🚀 Getting Started
+
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Environment Setup**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Update `.env.local` with your configuration:
+   ```env
+   # API Configuration
+   VITE_API_BASE_URL=http://localhost:3000/api
+   
+   # AWS Cognito Configuration - Get these from your AWS Console
+   VITE_COGNITO_USER_POOL_ID=your-user-pool-id
+   VITE_COGNITO_CLIENT_ID=your-client-id
+   VITE_COGNITO_REGION=us-east-1
+   ```
+
+3. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Access the Application**
+   - Open http://localhost:5173
+   - Register a new account or login with existing credentials
+   - Start exploring the mock data!
+
+## 🎮 Testing with Mock Data
+
+### Dashboard Testing
+1. Navigate to the Dashboard
+2. Enter any Account ID (e.g., `ACC000001`) to load mock data
+3. View real-time metrics and transaction statistics
+4. Click "Create Transaction" to add new transactions
+5. Click "View Details" on any transaction to see full information
+
+### Transactions Testing
+1. Go to the Transactions page
+2. Use the search and filter options to find specific transactions
+3. Click "New Transaction" to create test transactions
+4. Edit existing transactions by clicking the edit icon
+5. View detailed transaction information
+
+### Fraud Alerts Testing
+1. Visit the Fraud Alerts page
+2. Filter by severity (Critical, High, Medium, Low) and status
+3. Create new fraud alerts using the "New Alert" button
+4. Update alert status and add investigation notes
+5. View risk scores and investigation details
+
+### Audit Trail Testing
+1. Check the Audit Trail page
+2. Filter by event type, user, and date range
+3. View comprehensive logs of all system activities
+4. See success/failure status for each event
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **React 18** with Vite for fast development
+- **Ant Design** for UI components
+- **Redux Toolkit Query** for state management and API calls
+- **React Router** for navigation
+- **AWS Cognito** for authentication
+- **Mock Data Service** for testing and demonstration
+
+### Project Structure
+```
+src/
+├── components/          # Reusable UI components
+├── pages/              # Page components
+├── store/              # Redux store and API slices
+├── services/           # API services and mock data
+├── hooks/              # Custom React hooks
+├── contexts/           # React contexts
+└── assets/             # Static assets
+```
+
+### Mock Data Architecture
+- **mockData.js**: Core mock data generators and service
+- **mockApi.js**: RTK Query API slice using mock data
+- **Realistic Data**: Transactions, alerts, logs, and metrics
+- **Interactive Operations**: Full CRUD functionality
+- **Real-time Updates**: Simulated live data feeds
+
+## 🔧 Development
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run test` - Run unit tests
+- `npm run lint` - Run ESLint
+
+### Adding New Mock Data
+1. Update `src/services/mockData.js` with new data generators
+2. Add corresponding API endpoints in `src/store/api/mockApi.js`
+3. Update components to use the new mock data
+
+### Switching Between Mock and Real API
+- **Mock Mode**: Uses local mock data (current setup)
+- **Real API Mode**: Update `src/store/index.js` to use real API slices
+- **Environment Variables**: Configure API endpoints in `.env.local`
+
+## 🎨 UI/UX Features
+
+### Accessibility
+- ARIA labels and semantic HTML
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast mode support
+
+### Responsive Design
+- Mobile-first approach
+- Tablet and desktop optimization
+- Flexible layouts and grids
+
+### User Experience
+- Loading states and error handling
+- Real-time updates and notifications
+- Intuitive navigation and workflows
+- Comprehensive filtering and search
+
+## 🔒 Security
+
+### Authentication
+- AWS Cognito integration
+- JWT token management
+- Protected routes
+- Session management
+
+### Data Protection
+- Input validation and sanitization
+- CORS configuration
+- Secure API communication
+- Mock data isolation
+
+## 📊 Performance
+
+### Optimization
+- Code splitting and lazy loading
+- Virtualized tables for large datasets
+- Efficient state management
+- Optimized bundle size
+
+### Monitoring
+- Real-time performance metrics
+- Error tracking and logging
+- User activity monitoring
+- System health checks
+
+## 🚀 Deployment
+
+### Production Build
+```bash
+npm run build
+```
+
+### Environment Configuration
+- Set production API endpoints
+- Configure AWS Cognito for production
+- Update environment variables
+- Enable real-time features
+
+### Deployment Options
+- AWS S3 + CloudFront
+- Vercel
+- Netlify
+- Docker containers
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions:
+- Check the documentation
+- Review the mock data examples
+- Test with the provided demo data
+- Contact the development team
+
+---
+
+**Happy Testing! 🎉**
+
+The mock data system allows you to fully explore and test all features without needing a backend connection. Try creating transactions, managing fraud alerts, and exploring the audit trail!
