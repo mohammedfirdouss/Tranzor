@@ -1,11 +1,9 @@
 // Lambda handler for POST /auth/login
 const AWS = require('aws-sdk');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
-const dynamo = new AWS.DynamoDB.DocumentClient();
-const USERS_TABLE = process.env.USERS_TABLE_NAME;
-const JWT_SECRET = process.env.JWT_SECRET;
+const cognito = new AWS.CognitoIdentityServiceProvider();
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const CLIENT_ID = process.env.COGNITO_USER_POOL_CLIENT_ID;
 
 exports.handler = async (event) => {
   try {
@@ -13,27 +11,30 @@ exports.handler = async (event) => {
     if (!email || !password) {
       return { statusCode: 400, body: JSON.stringify({ message: 'Email and password required' }) };
     }
-    // Lookup user
-    const result = await dynamo.query({
-      TableName: USERS_TABLE,
-      IndexName: 'email-index',
-      KeyConditionExpression: 'email = :email',
-      ExpressionAttributeValues: { ':email': email }
-    }).promise();
-    const user = result.Items && result.Items[0];
-    if (!user) {
-      return { statusCode: 401, body: JSON.stringify({ message: 'Invalid credentials' }) };
-    }
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return { statusCode: 401, body: JSON.stringify({ message: 'Invalid credentials' }) };
-    }
-    // Generate JWT
-    const token = jwt.sign({ userId: user.userId, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ user: { userId: user.userId, email: user.email, createdAt: user.createdAt }, token })
+    const params = {
+      AuthFlow: 'USER_PASSWORD_AUTH',
+      ClientId: CLIENT_ID,
+      AuthParameters: {
+        USERNAME: email,
+        PASSWORD: password
+      }
     };
+    try {
+      const result = await cognito.initiateAuth(params).promise();
+      const tokens = result.AuthenticationResult;
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          idToken: tokens.IdToken,
+          accessToken: tokens.AccessToken,
+          refreshToken: tokens.RefreshToken,
+          expiresIn: tokens.ExpiresIn,
+          tokenType: tokens.TokenType
+        })
+      };
+    } catch (err) {
+      return { statusCode: 401, body: JSON.stringify({ message: err.message }) };
+    }
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }) };
   }

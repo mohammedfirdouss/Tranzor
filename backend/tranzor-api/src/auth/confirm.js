@@ -1,0 +1,28 @@
+// Lambda handler for POST /auth/confirm
+const AWS = require('aws-sdk');
+
+const cognito = new AWS.CognitoIdentityServiceProvider();
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const CLIENT_ID = process.env.COGNITO_USER_POOL_CLIENT_ID;
+
+exports.handler = async (event) => {
+  try {
+    const { email, code } = JSON.parse(event.body || '{}');
+    if (!email || !code) {
+      return { statusCode: 400, body: JSON.stringify({ message: 'Email and confirmation code required' }) };
+    }
+    const params = {
+      ClientId: CLIENT_ID,
+      Username: email,
+      ConfirmationCode: code
+    };
+    try {
+      await cognito.confirmSignUp(params).promise();
+      return { statusCode: 200, body: JSON.stringify({ message: 'Account confirmed. You may now log in.' }) };
+    } catch (err) {
+      return { statusCode: 400, body: JSON.stringify({ message: err.message }) };
+    }
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }) };
+  }
+};

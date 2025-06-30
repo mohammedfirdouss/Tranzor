@@ -1,12 +1,9 @@
 // Lambda handler for POST /auth/register
 const AWS = require('aws-sdk');
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
-const jwt = require('jsonwebtoken');
 
-const dynamo = new AWS.DynamoDB.DocumentClient();
-const USERS_TABLE = process.env.USERS_TABLE_NAME;
-const JWT_SECRET = process.env.JWT_SECRET;
+const cognito = new AWS.CognitoIdentityServiceProvider();
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+const CLIENT_ID = process.env.COGNITO_USER_POOL_CLIENT_ID;
 
 exports.handler = async (event) => {
   try {
@@ -14,30 +11,27 @@ exports.handler = async (event) => {
     if (!email || !password) {
       return { statusCode: 400, body: JSON.stringify({ message: 'Email and password required' }) };
     }
-    // Check if user exists
-    const existing = await dynamo.query({
-      TableName: USERS_TABLE,
-      IndexName: 'email-index',
-      KeyConditionExpression: 'email = :email',
-      ExpressionAttributeValues: { ':email': email }
-    }).promise();
-    if (existing.Items && existing.Items.length > 0) {
-      return { statusCode: 409, body: JSON.stringify({ message: 'User already exists' }) };
+    // Call Cognito signUp
+    try {
+      const params = {
+        ClientId: CLIENT_ID,
+        Username: email,
+        Password: password,
+        UserAttributes: [
+          { Name: 'email', Value: email }
+        ]
+      };
+      await cognito.signUp(params).promise();
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Registration successful. Please check your email for the confirmation code.' })
+      };
+    } catch (err) {
+      if (err.code === 'UsernameExistsException') {
+        return { statusCode: 409, body: JSON.stringify({ message: 'User already exists' }) };
+      }
+      return { statusCode: 400, body: JSON.stringify({ message: err.message }) };
     }
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
-    const userId = uuidv4();
-    const createdAt = new Date().toISOString();
-    await dynamo.put({
-      TableName: USERS_TABLE,
-      Item: { userId, email, passwordHash, createdAt }
-    }).promise();
-    // Generate JWT
-    const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '1h' });
-    return {
-      statusCode: 201,
-      body: JSON.stringify({ user: { userId, email, createdAt }, token })
-    };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }) };
   }
