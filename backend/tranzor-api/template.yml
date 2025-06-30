@@ -164,11 +164,14 @@ Resources:
       CodeUri: src/auth/
       Environment:
         Variables:
-          USERS_TABLE_NAME: !Ref UsersTable
-          JWT_SECRET: "REPLACE_WITH_SECRET"
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+          COGNITO_USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:SignUp
+              Resource: '*'
       Events:
         ApiRegister:
           Type: Api
@@ -185,11 +188,14 @@ Resources:
       CodeUri: src/auth/
       Environment:
         Variables:
-          USERS_TABLE_NAME: !Ref UsersTable
-          JWT_SECRET: "REPLACE_WITH_SECRET"
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+          COGNITO_USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:InitiateAuth
+              Resource: '*'
       Events:
         ApiLogin:
           Type: Api
@@ -206,17 +212,73 @@ Resources:
       CodeUri: src/auth/
       Environment:
         Variables:
-          USERS_TABLE_NAME: !Ref UsersTable
-          JWT_SECRET: "REPLACE_WITH_SECRET"
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPool
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:GetUser
+              Resource: '*'
       Events:
         ApiMe:
           Type: Api
           Properties:
             Path: /auth/me
             Method: get
+
+  ConfirmFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Confirm
+      Handler: confirm.handler
+      Runtime: nodejs18.x
+      CodeUri: src/auth/
+      Environment:
+        Variables:
+          COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+          COGNITO_USER_POOL_CLIENT_ID: !Ref CognitoUserPoolClient
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:ConfirmSignUp
+              Resource: '*'
+      Events:
+        ApiConfirm:
+          Type: Api
+          Properties:
+            Path: /auth/confirm
+            Method: post
+
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: TranzorUserPool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: TranzorFrontendClient
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_CUSTOM_AUTH
+      SupportedIdentityProviders:
+        - COGNITO
 
 Outputs:
   TransactionsTableName:
@@ -254,3 +316,10 @@ Outputs:
   MeFunctionArn:
     Description: ARN of the Me Lambda function
     Value: !GetAtt MeFunction.Arn
+
+  CognitoUserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref CognitoUserPool
+  CognitoUserPoolClientId:
+    Description: Cognito User Pool App Client ID
+    Value: !Ref CognitoUserPoolClient
