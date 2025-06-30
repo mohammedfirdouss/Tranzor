@@ -5,21 +5,11 @@ const cognito = new AWS.CognitoIdentityServiceProvider();
 const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
 const CLIENT_ID = process.env.COGNITO_USER_POOL_CLIENT_ID;
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
-};
-
 exports.handler = async (event) => {
   try {
     const { email, password } = JSON.parse(event.body || '{}');
     if (!email || !password) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'Email and password required' }),
-        headers: corsHeaders
-      };
+      return { statusCode: 400, body: JSON.stringify({ message: 'Email and password required' }), headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" } };
     }
     const params = {
       AuthFlow: 'USER_PASSWORD_AUTH',
@@ -41,20 +31,15 @@ exports.handler = async (event) => {
           expiresIn: tokens.ExpiresIn,
           tokenType: tokens.TokenType
         }),
-        headers: corsHeaders
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization"
+        }
       };
     } catch (err) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ message: err.message }),
-        headers: corsHeaders
-      };
+      return { statusCode: 401, body: JSON.stringify({ message: err.message }), headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" } };
     }
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Internal server error' }),
-      headers: corsHeaders
-    };
+    return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }), headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" } };
   }
 };

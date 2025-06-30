@@ -10,12 +10,6 @@ const client = jwksClient({
   jwksUri: JWKS_URI
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  "Access-Control-Allow-Methods": "OPTIONS,GET,POST"
-};
-
 function getKey(header, callback) {
   client.getSigningKey(header.kid, function (err, key) {
     if (err) {
@@ -31,11 +25,7 @@ exports.handler = async (event) => {
   try {
     const authHeader = event.headers && (event.headers.Authorization || event.headers.authorization);
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ message: 'Missing or invalid Authorization header' }),
-        headers: corsHeaders
-      };
+      return { statusCode: 401, body: JSON.stringify({ message: 'Missing or invalid Authorization header' }), headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" } };
     }
     const token = authHeader.replace('Bearer ', '');
     let payload;
@@ -49,24 +39,19 @@ exports.handler = async (event) => {
           else resolve(decoded);
         });
       });
-    } catch (err) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ message: 'Invalid or expired token' }),
-        headers: corsHeaders
-      };
+    } catch (e) {
+      return { statusCode: 401, body: JSON.stringify({ message: 'Invalid token' }), headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" } };
     }
     // Return user info from token
     return {
       statusCode: 200,
-      body: JSON.stringify({ user: payload }),
-      headers: corsHeaders
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization"
+      },
+      body: JSON.stringify({ user: payload })
     };
   } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Internal server error' }),
-      headers: corsHeaders
-    };
+    return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }), headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type,Authorization" } };
   }
 };
