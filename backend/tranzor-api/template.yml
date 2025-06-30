@@ -88,6 +88,7 @@ Resources:
           Properties:
             Path: /v1/transactions
             Method: post
+            RestApiId: !Ref ApiGateway
 
 
   GetTransactionFunction:
@@ -108,7 +109,8 @@ Resources:
           Type: Api
           Properties:
             Path: /v1/transactions/{transactionId}
-            Method: get  
+            Method: get
+            RestApiId: !Ref ApiGateway
 
 
   ListAccountTransactionsFunction:
@@ -130,6 +132,7 @@ Resources:
           Properties:
             Path: /v1/accounts/{accountId}/transactions
             Method: get
+            RestApiId: !Ref ApiGateway
                
 
   UsersTable:
@@ -178,6 +181,7 @@ Resources:
           Properties:
             Path: /auth/register
             Method: post
+            RestApiId: !Ref ApiGateway
 
   LoginFunction:
     Type: AWS::Serverless::Function
@@ -202,6 +206,7 @@ Resources:
           Properties:
             Path: /auth/login
             Method: post
+            RestApiId: !Ref ApiGateway
 
   MeFunction:
     Type: AWS::Serverless::Function
@@ -225,6 +230,7 @@ Resources:
           Properties:
             Path: /auth/me
             Method: get
+            RestApiId: !Ref ApiGateway
 
   ConfirmFunction:
     Type: AWS::Serverless::Function
@@ -249,6 +255,7 @@ Resources:
           Properties:
             Path: /auth/confirm
             Method: post
+            RestApiId: !Ref ApiGateway
 
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
@@ -280,6 +287,15 @@ Resources:
       SupportedIdentityProviders:
         - COGNITO
 
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Stage
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowMethods: "'OPTIONS,GET,POST'"
+
 Outputs:
   TransactionsTableName:
     Description: Name of the Transactions DynamoDB table
@@ -289,7 +305,7 @@ Outputs:
     Value: !GetAtt ProcessTransactionFunction.Arn
   ApiUrl:
     Description: API Gateway endpoint URL
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Stage/v1/transactions"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Stage/v1/transactions"
   TransactionProcessingQueueUrl:
     Description: URL of the Transaction Processing SQS queue
     Value: !Ref TransactionProcessingQueue
