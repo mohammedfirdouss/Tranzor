@@ -16,6 +16,10 @@ import TransactionsPage from './pages/TransactionsPage';
 import FraudAlertsPage from './pages/FraudAlertsPage';
 import AuditTrailPage from './pages/AuditTrailPage';
 import SettingsPage from './pages/SettingsPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import RequireAuth from './components/common/RequireAuth';
+import UserMenu from './components/common/UserMenu';
 
 const { Header, Sider, Content } = Layout;
 
@@ -137,7 +141,7 @@ function AppLayout() {
             Transaction Management System
           </h1>
           <div style={{ color: '#666' }}>
-            {/* Add user info, notifications, etc. here */}
+            <UserMenu />
           </div>
         </Header>
         <Content 
@@ -151,11 +155,15 @@ function AppLayout() {
         >
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<DashboardPage />} />
-              <Route path="/transactions" element={<TransactionsPage />} />
-              <Route path="/fraud-alerts" element={<FraudAlertsPage />} />
-              <Route path="/audit-trail" element={<AuditTrailPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route element={<RequireAuth />}>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/transactions" element={<TransactionsPage />} />
+                <Route path="/fraud-alerts" element={<FraudAlertsPage />} />
+                <Route path="/audit-trail" element={<AuditTrailPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Route>
             </Routes>
           </ErrorBoundary>
         </Content>
