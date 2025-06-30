@@ -305,7 +305,7 @@ Outputs:
     Value: !GetAtt ProcessTransactionFunction.Arn
   ApiUrl:
     Description: API Gateway endpoint URL
-    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Stage/v1/transactions"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/v1"
   TransactionProcessingQueueUrl:
     Description: URL of the Transaction Processing SQS queue
     Value: !Ref TransactionProcessingQueue

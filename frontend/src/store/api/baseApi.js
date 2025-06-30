@@ -27,4 +27,4 @@ export const baseApi = createApi({
   endpoints: () => ({}),
   // Global error handling
   keepUnusedDataFor: 300, // Keep data for 5 minutes
-}); 
+});
