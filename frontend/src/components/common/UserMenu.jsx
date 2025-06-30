@@ -14,7 +14,7 @@ export default function UserMenu() {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      {user && <span>Welcome, {user.email || 'User'}</span>}
+      {user && <span>Welcome, {user.name || user.username || 'User'}</span>}
       <Button onClick={handleLogout} size="small">Logout</Button>
     </div>
   );

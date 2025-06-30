@@ -14,8 +14,12 @@ export default function RegisterPage() {
   const onFinish = async (values) => {
     setError(null);
     try {
-      // Only send email and password to backend
-      await register({ email: values.email, password: values.password }).unwrap();
+      // Send name, email and password to backend
+      await register({ 
+        name: values.name,
+        email: values.email, 
+        password: values.password 
+      }).unwrap();
       navigate('/confirm-signup', { state: { email: values.email } });
     } catch (err) {
       setError(err.data?.message || 'Registration failed');

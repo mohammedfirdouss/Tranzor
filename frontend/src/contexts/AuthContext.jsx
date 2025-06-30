@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { message } from 'antd';
 import { CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 import { userPool, authHelpers } from '../config/cognito';
+import { useDispatch } from 'react-redux';
+import { setCredentials, logout } from '../store/authSlice';
 
 const AuthContext = createContext();
 
@@ -17,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const dispatch = useDispatch();
 
   // Initialize authentication state
   useEffect(() => {
@@ -46,6 +49,12 @@ export const AuthProvider = ({ children }) => {
             
             setUser(userInfo);
             localStorage.setItem('tranzor_user_info', JSON.stringify(userInfo));
+            
+            // Also update Redux store
+            dispatch(setCredentials({
+              user: userInfo,
+              token: accessToken
+            }));
           }
         }
       } catch (error) {
@@ -58,24 +67,21 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, []);
+  }, [dispatch]);
 
   // Sign in function
   const signIn = async (email, password) => {
     try {
       setLoading(true);
-      
       return new Promise((resolve, reject) => {
         const cognitoUser = new CognitoUser({
-          Username: email,
+          Username: email.trim().toLowerCase(),
           Pool: userPool,
         });
-
         const authDetails = new AuthenticationDetails({
-          Username: email,
+          Username: email.trim().toLowerCase(),
           Password: password,
         });
-
         cognitoUser.authenticateUser(authDetails, {
           onSuccess: async (result) => {
             try {
@@ -98,6 +104,12 @@ export const AuthProvider = ({ children }) => {
               setUser(userInfo);
               setIsAuthenticated(true);
               localStorage.setItem('tranzor_user_info', JSON.stringify(userInfo));
+              
+              // Also update Redux store
+              dispatch(setCredentials({
+                user: userInfo,
+                token: accessToken
+              }));
               
               message.success('Successfully signed in!');
               resolve(userInfo);
@@ -127,6 +139,10 @@ export const AuthProvider = ({ children }) => {
       authHelpers.signOut();
       setUser(null);
       setIsAuthenticated(false);
+      
+      // Also clear Redux store
+      dispatch(logout());
+      
       message.success('Successfully signed out!');
     } catch (error) {
       console.error('Sign out error:', error);

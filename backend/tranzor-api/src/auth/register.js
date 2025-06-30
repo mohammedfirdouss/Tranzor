@@ -13,7 +13,7 @@ const corsHeaders = {
 
 exports.handler = async (event) => {
   try {
-    const { email, password } = JSON.parse(event.body || '{}');
+    const { email, password, name } = JSON.parse(event.body || '{}');
     if (!email || !password) {
       return {
         statusCode: 400,
@@ -23,13 +23,20 @@ exports.handler = async (event) => {
     }
     // Call Cognito signUp
     try {
+      const userAttributes = [
+        { Name: 'email', Value: email }
+      ];
+      
+      // Add name if provided
+      if (name) {
+        userAttributes.push({ Name: 'name', Value: name });
+      }
+      
       const params = {
         ClientId: CLIENT_ID,
         Username: email,
         Password: password,
-        UserAttributes: [
-          { Name: 'email', Value: email }
-        ]
+        UserAttributes: userAttributes
       };
       await cognito.signUp(params).promise();
       return {

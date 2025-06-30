@@ -92,22 +92,6 @@ export default function LoginPage() {
               autoComplete="email"
             />
           </Form.Item>
-          <Form.Item
-            name="name"
-            label="Name"
-            rules={[
-              {
-                required: true,
-                message: 'Please enter your name!',
-              },
-            ]}
-          >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Enter your name"
-              autoComplete="name"
-            />
-          </Form.Item>
 
           <Form.Item
             name="password"
