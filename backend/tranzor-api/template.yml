@@ -290,7 +290,7 @@ Resources:
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: Stage
+      StageName: v1
       Cors:
         AllowOrigin: "'*'"
         AllowHeaders: "'Content-Type,Authorization'"
