@@ -1,6 +1,6 @@
 # Tranzor - Real-Time Financial Transaction Processing Platform
 
-Tranzor is a serverless, real-time financial transaction processing system designed to address the scalability, security, and performance challenges faced by financial institutions. Built with modern cloud-native technologies, Tranzor provides comprehensive transaction monitoring, fraud detection, and audit capabilities.
+Tranzor is a serverless, real-time financial transaction processing system designed to address the scalability, security, and performance challenges faced by financial institutions. It is built with modern cloud-native technologies, Tranzor provides comprehensive transaction monitoring, fraud detection, and audit capabilities.
 
 ## 🎯 Project Overview
 
