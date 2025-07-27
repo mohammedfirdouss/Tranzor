@@ -333,4 +333,4 @@ npm run deploy:prod
 
 **Tranzor** - Powering the future of financial transaction processing with modern, scalable, and secure technology.
 
-*Built with ❤️ by the Tranzor team*
+*Built with ❤️ by Me*
