@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Menu, Dropdown, Avatar, Space } from 'antd';
+import { Layout, Menu, Dropdown, Avatar, Space, ConfigProvider } from 'antd';
 import {
   DashboardOutlined,
   TableOutlined,
@@ -13,6 +13,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } f
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { tranzorTheme } from './theme';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
@@ -23,6 +24,7 @@ import FraudAlertsPage from './pages/FraudAlertsPage';
 import AuditTrailPage from './pages/AuditTrailPage';
 import SettingsPage from './pages/SettingsPage';
 import ConfirmSignUpPage from './pages/ConfirmSignUpPage';
+import './theme/globalStyles.css';
 
 const { Header, Sider, Content } = Layout;
 
@@ -271,19 +273,21 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <AuthProvider>
-    <Router>
-          <ErrorBoundary>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
-              <Route path="/*" element={<AppLayout />} />
-            </Routes>
-          </ErrorBoundary>
-    </Router>
-      </AuthProvider>
-    </Provider>
+    <ConfigProvider theme={tranzorTheme}>
+      <Provider store={store}>
+        <AuthProvider>
+          <Router>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
+                <Route path="/*" element={<AppLayout />} />
+              </Routes>
+            </ErrorBoundary>
+          </Router>
+        </AuthProvider>
+      </Provider>
+    </ConfigProvider>
   );
 }

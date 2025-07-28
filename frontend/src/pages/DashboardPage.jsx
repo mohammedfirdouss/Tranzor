@@ -167,7 +167,7 @@ export default function DashboardPage() {
       <LoadingSpinner spinning={transactionsLoading || metricsLoading}>
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card className="tranzor-card-elevated">
               <Statistic 
                 title="Total Transactions" 
                 value={stats.total}
@@ -176,7 +176,7 @@ export default function DashboardPage() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card className="tranzor-card-elevated">
               <Statistic 
                 title="Approved" 
                 value={stats.approved} 
@@ -185,7 +185,7 @@ export default function DashboardPage() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card className="tranzor-card-elevated">
               <Statistic 
                 title="Declined" 
                 value={stats.declined} 
@@ -194,7 +194,7 @@ export default function DashboardPage() {
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card className="tranzor-card-elevated">
               <Statistic 
                 title="Pending" 
                 value={stats.pending} 
@@ -208,7 +208,7 @@ export default function DashboardPage() {
         {metrics && (
           <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+              <Card className="tranzor-card-elevated">
                 <Statistic 
                   title="Current TPS" 
                   value={metrics.currentTps || 0}
@@ -218,7 +218,7 @@ export default function DashboardPage() {
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+              <Card className="tranzor-card-elevated">
                 <Statistic 
                   title="Avg Latency" 
                   value={metrics.averageLatency || 0}
@@ -228,7 +228,7 @@ export default function DashboardPage() {
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+              <Card className="tranzor-card-elevated">
                 <Statistic 
                   title="Success Rate" 
                   value={metrics.successRate || 0}
@@ -238,7 +238,7 @@ export default function DashboardPage() {
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              <Card>
+              <Card className="tranzor-card-elevated">
                 <Statistic 
                   title="Uptime" 
                   value={metrics.uptime || 0}
@@ -251,7 +251,15 @@ export default function DashboardPage() {
         )}
 
         {/* Transactions Table */}
-        <Card title="Latest Transactions" style={{ marginBottom: 24 }}>
+        <Card 
+          title={
+            <span className="tranzor-gradient-text">
+              Latest Transactions
+            </span>
+          } 
+          className="tranzor-card-elevated"
+          style={{ marginBottom: 24 }}
+        >
           <DataTable
             data={transactions}
             columns={[

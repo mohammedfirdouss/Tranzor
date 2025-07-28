@@ -111,6 +111,7 @@ const DataTable = ({
   return (
     <>
       <Table
+        className="tranzor-enhanced-table"
         columns={finalColumns}
         dataSource={data}
         rowKey={rowKey}
@@ -118,7 +119,10 @@ const DataTable = ({
         pagination={false}
         onRow={(record) => ({
           onClick: () => handleRowClick(record),
-          style: { cursor: onRowClick ? 'pointer' : 'default' },
+          style: { 
+            cursor: onRowClick ? 'pointer' : 'default',
+            transition: 'all 0.2s ease'
+          },
         })}
         locale={{ emptyText }}
         scroll={{ x: 'max-content' }}
@@ -127,7 +131,11 @@ const DataTable = ({
       
       {!pagination && hasMore && (
         <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Button onClick={onNextPage} disabled={loading}>
+          <Button 
+            onClick={onNextPage} 
+            disabled={loading}
+            style={{ borderRadius: '8px' }}
+          >
             Load More
           </Button>
         </div>
