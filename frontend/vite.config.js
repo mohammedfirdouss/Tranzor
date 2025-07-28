@@ -16,6 +16,7 @@ export default defineConfig({
     global: 'window',
   },
   optimizeDeps: {
+    exclude: ['@ant-design/icons'],
     esbuildOptions: {
       plugins: [
         NodeGlobalsPolyfillPlugin({
