@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip, Typography, Divider, message, Form, Select, InputNumber } from 'antd';
+import { Card, Statistic, Row, Col, Input, Button, Modal, Badge, Tooltip, Typography, Divider, message, Form, Select, InputNumber, Tabs } from 'antd';
 import { DashboardOutlined, ReloadOutlined, WifiOutlined, InfoCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import DataTable from '../components/common/DataTable';
 import { 
+  TransactionTrendChart, 
+  TransactionVolumeChart, 
+  TransactionDistributionChart, 
+  FraudScoreChart 
+} from '../components/charts/TransactionChart';
+import { 
+  SystemPerformanceChart, 
+  SystemHealthGauges, 
+  RealtimeMetrics 
+} from '../components/charts/MetricsChart';
+import { 
   useGetLatestTransactionsQuery, 
   useGetTransactionQuery, 
   useGetRealtimeMetricsQuery,
+  useGetChartDataQuery,
   useCreateTransactionMutation
 } from '../store/api/mockApi';
 
@@ -41,6 +53,12 @@ export default function DashboardPage() {
   );
 
   const { 
+    data: chartData,
+    isLoading: chartLoading,
+    error: chartError
+  } = useGetChartDataQuery();
+
+  const { 
     data: transactionDetails,
     isLoading: detailsLoading
   } = useGetTransactionQuery(
@@ -52,6 +70,7 @@ export default function DashboardPage() {
 
   const transactions = transactionsData?.transactions || [];
   const metrics = metricsData || {};
+  const charts = chartData || {};
 
   const stats = {
     total: transactions.length,

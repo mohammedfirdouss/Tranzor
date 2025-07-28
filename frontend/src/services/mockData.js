@@ -116,7 +116,104 @@ const generateMetrics = () => {
     totalTransactions: Math.floor(Math.random() * 10000) + 5000,
     activeUsers: Math.floor(Math.random() * 1000) + 100,
     errorRate: Math.random() * 5,
-    uptime: Math.random() * 10 + 90
+    uptime: Math.random() * 10 + 90,
+    cpuUsage: Math.random() * 60 + 20,
+    memoryUsage: Math.random() * 70 + 15,
+    previousTps: Math.random() * 100 + 40,
+    previousLatency: Math.random() * 200 + 60,
+    activeAlerts: Math.floor(Math.random() * 5)
+  };
+};
+
+// Generate chart data for visualizations
+const generateChartData = () => {
+  const last7Days = [];
+  const transactionTypes = ['PAYMENT', 'TRANSFER', 'WITHDRAWAL', 'DEPOSIT'];
+  const statuses = ['Approved', 'Declined', 'Pending'];
+  const currencies = ['USD', 'EUR', 'GBP'];
+  
+  // Transaction trends (last 7 days)
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    statuses.forEach(status => {
+      last7Days.push({
+        date: dateStr,
+        status,
+        count: Math.floor(Math.random() * 100) + 20
+      });
+    });
+  }
+  
+  // Transaction volume by type
+  const volumeData = [];
+  transactionTypes.forEach(type => {
+    currencies.forEach(currency => {
+      volumeData.push({
+        type,
+        currency,
+        amount: Math.floor(Math.random() * 50000) + 10000
+      });
+    });
+  });
+  
+  // Transaction distribution
+  const distributionData = transactionTypes.map(type => ({
+    type,
+    value: Math.floor(Math.random() * 100) + 20
+  }));
+  
+  // Fraud score distribution
+  const fraudScoreData = [
+    { scoreRange: '0-20', count: Math.floor(Math.random() * 50) + 100 },
+    { scoreRange: '21-40', count: Math.floor(Math.random() * 30) + 50 },
+    { scoreRange: '41-60', count: Math.floor(Math.random() * 20) + 30 },
+    { scoreRange: '61-80', count: Math.floor(Math.random() * 15) + 10 },
+    { scoreRange: '81-100', count: Math.floor(Math.random() * 10) + 5 }
+  ];
+  
+  // System performance data (last 24 hours)
+  const performanceData = {
+    tps: [],
+    latency: [],
+    memory: [],
+    cpu: []
+  };
+  
+  for (let i = 23; i >= 0; i--) {
+    const time = new Date();
+    time.setHours(time.getHours() - i);
+    const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    performanceData.tps.push({
+      time: timeStr,
+      value: Math.random() * 50 + 30
+    });
+    
+    performanceData.latency.push({
+      time: timeStr,
+      value: Math.random() * 100 + 50
+    });
+    
+    performanceData.memory.push({
+      time: timeStr,
+      value: Math.random() * 40 + 30
+    });
+    
+    performanceData.cpu.push({
+      time: timeStr,
+      value: Math.random() * 60 + 20
+    });
+  }
+  
+  return {
+    transactionTrends: last7Days,
+    transactionVolume: volumeData,
+    transactionDistribution: distributionData,
+    fraudScoreDistribution: fraudScoreData,
+    systemPerformance: performanceData
   };
 };
 
@@ -211,6 +308,13 @@ export const mockDataService = {
     const metrics = generateMetrics();
     
     return mockApiCall(metrics);
+  },
+
+  // Get chart data for visualizations
+  getChartData: async () => {
+    const chartData = generateChartData();
+    
+    return mockApiCall(chartData);
   },
 
   // Get users

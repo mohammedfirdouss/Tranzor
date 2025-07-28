@@ -119,6 +119,19 @@ export const mockApi = createApi({
       providesTags: ['Metrics'],
     }),
 
+    // Chart Data
+    getChartData: builder.query({
+      queryFn: async () => {
+        try {
+          const data = await mockDataService.getChartData();
+          return { data };
+        } catch (error) {
+          return { error: { status: 500, data: error.message } };
+        }
+      },
+      providesTags: ['Metrics'],
+    }),
+
     // Users
     getUsers: builder.query({
       queryFn: async () => {
@@ -144,5 +157,6 @@ export const {
   useUpdateFraudAlertMutation,
   useGetAuditLogsQuery,
   useGetRealtimeMetricsQuery,
+  useGetChartDataQuery,
   useGetUsersQuery,
 } = mockApi; 
