@@ -16,7 +16,6 @@ export default defineConfig({
     global: 'window',
   },
   optimizeDeps: {
-    exclude: ['@ant-design/icons'],
     include: ['classnames', 'react-is'],
     esbuildOptions: {
       plugins: [
