@@ -98,7 +98,6 @@ export const TransactionDistributionChart = ({ data, loading = false }) => {
     radius: 0.8,
     innerRadius: 0.4,
     label: {
-      type: 'outer',
       content: (item) => `${item.type} ${(item.percent * 100).toFixed(1)}%`,
     },
     interactions: [
