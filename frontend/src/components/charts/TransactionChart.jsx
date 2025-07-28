@@ -138,12 +138,15 @@ export const FraudScoreChart = ({ data, loading = false }) => {
     columnStyle: {
       radius: [4, 4, 0, 0],
     },
-    color: (datum) => {
-      if (datum.scoreRange.includes('0-20')) return '#52c41a';
-      if (datum.scoreRange.includes('21-40')) return '#1890ff';
-      if (datum.scoreRange.includes('41-60')) return '#fa8c16';
-      if (datum.scoreRange.includes('61-80')) return '#ff7875';
-      return '#ff4d4f';
+    color: {
+      field: 'scoreRange',
+      callback: (scoreRange) => {
+        if (scoreRange.includes('0-20')) return '#52c41a';
+        if (scoreRange.includes('21-40')) return '#1890ff';
+        if (scoreRange.includes('41-60')) return '#fa8c16';
+        if (scoreRange.includes('61-80')) return '#ff7875';
+        return '#ff4d4f';
+      },
     },
     tooltip: {
       formatter: (datum) => {
