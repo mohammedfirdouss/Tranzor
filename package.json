@@ -45,6 +45,7 @@
   ],
   "dependencies": {
     "react-icons": "^5.5.0",
+    "@ant-design/charts": "^2.0.0",
     "react-redux": "^9.2.0"
   }
 }
