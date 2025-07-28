@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('tranzor_auth_token', accessToken);
           
           // Get user info from ID token
-          if (idToken) {
+          if (idToken && typeof idToken === 'string' && idToken.split('.').length === 3) {
             const payload = JSON.parse(atob(idToken.split('.')[1]));
             const userInfo = {
               username: payload['cognito:username'] || payload.sub,

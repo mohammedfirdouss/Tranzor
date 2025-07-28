@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Line, Gauge, Liquid } from '@ant-design/charts';
 import { Card, Select, Row, Col, Statistic, Typography, Space } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined, TrendingUpOutlined, TrendingDownOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
