@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Line, Gauge, Liquid } from '@ant-design/charts';
 import { Card, Select, Row, Col, Statistic, Typography, Space } from 'antd';
-import { TrendingUpOutlined, TrendingDownOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -200,6 +200,7 @@ export const RealtimeMetrics = ({ metrics, loading = false }) => {
               fontWeight: 600
             }}
             prefix={tpsTrend >= 0 ? <TrendingUpOutlined /> : <TrendingDownOutlined />}
+            prefix={tpsTrend >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
             suffix="tx/s"
           />
           {tpsTrend !== 0 && (
@@ -221,6 +222,7 @@ export const RealtimeMetrics = ({ metrics, loading = false }) => {
               fontWeight: 600
             }}
             prefix={latencyTrend <= 0 ? <TrendingDownOutlined /> : <TrendingUpOutlined />}
+            prefix={latencyTrend <= 0 ? <ArrowDownOutlined /> : <ArrowUpOutlined />}
             suffix="ms"
           />
           {latencyTrend !== 0 && (
