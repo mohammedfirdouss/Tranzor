@@ -17,7 +17,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['@ant-design/icons'],
-    include: ['classnames'],
+    include: ['classnames', 'react-is'],
     esbuildOptions: {
       plugins: [
         NodeGlobalsPolyfillPlugin({
