@@ -5,6 +5,11 @@ import { userPool, authHelpers } from '../config/cognito';
 import { useDispatch } from 'react-redux';
 import { setCredentials, logout } from '../store/authSlice';
 
+// Check if we're in mock mode
+const isMockMode = import.meta.env.VITE_USE_MOCK_AUTH === 'true' || 
+                   !import.meta.env.VITE_COGNITO_USER_POOL_ID || 
+                   import.meta.env.VITE_COGNITO_USER_POOL_ID.includes('xxxxxxxxx');
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -71,6 +76,52 @@ export const AuthProvider = ({ children }) => {
 
   // Sign in function
   const signIn = async (email, password) => {
+    if (isMockMode) {
+      setLoading(true);
+      try {
+        // Mock authentication - accept any email/password for demo
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+        
+        const mockToken = 'mock-jwt-token-' + Date.now();
+        const mockIdToken = btoa(JSON.stringify({
+          'cognito:username': email.split('@')[0],
+          email: email,
+          name: email.split('@')[0],
+          sub: 'mock-user-id',
+          'cognito:groups': ['user']
+        }));
+        
+        localStorage.setItem('tranzor_mock_token', mockToken);
+        localStorage.setItem('tranzor_mock_id_token', mockIdToken);
+        localStorage.setItem('tranzor_auth_token', mockToken);
+        
+        const userInfo = {
+          username: email.split('@')[0],
+          email: email,
+          name: email.split('@')[0],
+          groups: ['user'],
+          sub: 'mock-user-id',
+        };
+        
+        setUser(userInfo);
+        setIsAuthenticated(true);
+        localStorage.setItem('tranzor_user_info', JSON.stringify(userInfo));
+        
+        dispatch(setCredentials({
+          user: userInfo,
+          token: mockToken
+        }));
+        
+        message.success('Successfully signed in! (Mock Mode)');
+        return userInfo;
+      } catch (error) {
+        message.error('Mock sign in failed');
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    }
+    
     try {
       setLoading(true);
       return new Promise((resolve, reject) => {
