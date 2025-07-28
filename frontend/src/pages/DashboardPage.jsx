@@ -269,40 +269,113 @@ export default function DashboardPage() {
           </Row>
         )}
 
-        {/* Transactions Table */}
-        <Card 
-          title={
-            <span className="tranzor-gradient-text">
-              Latest Transactions
-            </span>
-          } 
-          className="tranzor-card-elevated"
-          style={{ marginBottom: 24 }}
-        >
-          <DataTable
-            data={transactions}
-            columns={[
-              { title: 'Transaction ID', dataIndex: 'transactionId', key: 'transactionId' },
-              { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount, record) => `${record.currency} ${amount}` },
-              { title: 'Type', dataIndex: 'type', key: 'type' },
-              { title: 'Status', dataIndex: 'status', key: 'status' },
-              { title: 'Merchant', dataIndex: 'merchant', key: 'merchant' },
-              { title: 'Date', dataIndex: 'timestamp', key: 'timestamp', render: (timestamp) => new Date(timestamp).toLocaleDateString() },
-              {
-                title: 'Actions',
-                key: 'actions',
-                render: (_, record) => (
-                  <Button type="link" onClick={() => handleViewDetails(record)}>
-                    View Details
-                  </Button>
-                ),
-              },
-            ]}
-            loading={transactionsLoading}
-            pagination={false}
-          />
-        </Card>
       </LoadingSpinner>
+
+      {/* Enhanced Dashboard with Tabs */}
+      <Tabs
+        defaultActiveKey="overview"
+        items={[
+          {
+            key: 'overview',
+            label: 'Overview',
+            children: (
+              <div>
+                {/* Real-time Metrics with Trends */}
+                <RealtimeMetrics metrics={metrics} loading={metricsLoading} />
+                
+                <Divider />
+                
+                {/* Charts Row 1 */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24} lg={12}>
+                    <TransactionTrendChart 
+                      data={charts.transactionTrends || []} 
+                      loading={chartLoading} 
+                    />
+                  </Col>
+                  <Col xs={24} lg={12}>
+                    <TransactionDistributionChart 
+                      data={charts.transactionDistribution || []} 
+                      loading={chartLoading} 
+                    />
+                  </Col>
+                </Row>
+                
+                {/* Charts Row 2 */}
+                <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                  <Col xs={24} lg={12}>
+                    <TransactionVolumeChart 
+                      data={charts.transactionVolume || []} 
+                      loading={chartLoading} 
+                    />
+                  </Col>
+                  <Col xs={24} lg={12}>
+                    <FraudScoreChart 
+                      data={charts.fraudScoreDistribution || []} 
+                      loading={chartLoading} 
+                    />
+                  </Col>
+                </Row>
+              </div>
+            ),
+          },
+          {
+            key: 'performance',
+            label: 'System Performance',
+            children: (
+              <div>
+                {/* System Health Gauges */}
+                <SystemHealthGauges metrics={metrics} loading={metricsLoading} />
+                
+                <Divider />
+                
+                {/* Performance Chart */}
+                <SystemPerformanceChart 
+                  data={charts.systemPerformance || {}} 
+                  loading={chartLoading} 
+                />
+              </div>
+            ),
+          },
+          {
+            key: 'transactions',
+            label: 'Recent Transactions',
+            children: (
+              <Card 
+                title={
+                  <span className="tranzor-gradient-text">
+                    Latest Transactions
+                  </span>
+                } 
+                className="tranzor-card-elevated"
+              >
+                <DataTable
+                  data={transactions}
+                  columns={[
+                    { title: 'Transaction ID', dataIndex: 'transactionId', key: 'transactionId' },
+                    { title: 'Amount', dataIndex: 'amount', key: 'amount', render: (amount, record) => `${record.currency} ${amount}` },
+                    { title: 'Type', dataIndex: 'type', key: 'type' },
+                    { title: 'Status', dataIndex: 'status', key: 'status' },
+                    { title: 'Merchant', dataIndex: 'merchant', key: 'merchant' },
+                    { title: 'Date', dataIndex: 'timestamp', key: 'timestamp', render: (timestamp) => new Date(timestamp).toLocaleDateString() },
+                    {
+                      title: 'Actions',
+                      key: 'actions',
+                      render: (_, record) => (
+                        <Button type="link" onClick={() => handleViewDetails(record)}>
+                          View Details
+                        </Button>
+                      ),
+                    },
+                  ]}
+                  loading={transactionsLoading}
+                  pagination={false}
+                />
+              </Card>
+            ),
+          },
+        ]}
+      />
 
       {/* Transaction Details Modal */}
       <Modal
